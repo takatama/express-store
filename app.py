@@ -1,4 +1,4 @@
-from bottle import route, run, template, request, redirect, response
+from bottle import route, run, template, request, redirect, response, abort
 import sqlite3
 import uuid
 import hashlib
@@ -89,7 +89,7 @@ def show_product(product_id):
     cur = conn.cursor()
     product = cur.execute('SELECT * FROM products WHERE id = ?;', (product_id,)).fetchone()
     if product is None:
-        return '<p>該当する商品がありません。</p><p><a href="/products">商品一覧</a>へ戻る。</p>'
+        abort(400, '該当する商品がありません。')
     reviews = cur.execute('SELECT r.rate, r.comment, u.id, u.nickname FROM reviews r JOIN users u ON r.product_id = ? AND r.user_id = u.id;', (product_id,)).fetchall()
     rate = 0
     comments = []
@@ -127,14 +127,53 @@ def show_product(product_id):
     </td>
   </tr>
 </table>
-<form action="/comments" method="post">
+<form action="/reviews" method="post">
   <p>あなたの評価<select name="rate">{{ !options }}</select></p>
 %if my_comment is None:
-  <p>あなたのコメント<input type="text" /></p>
+  <p>あなたのコメント<input type="text" name="comment" /></p>
 %else:
-  <p>あなたのコメント<input type="text" value="{{ my_comment }}" /></p>
+  <p>あなたのコメント<input type="text" name="comment" value="{{ my_comment }}" /></p>
 %end
   <p><input type="submit" value="投稿" /></p>
-</form>''', nickname=nickname, product=product, rate=rate, comments=comments, my_comment=my_comment, options=options)
+  <input type="hidden" name="product_id" value="{{ product[0] }}" />
+</form>
+%if my_comment is not None:
+<form action="/reviews" method="post">
+  <input type="hidden" name="_method" value="delete" />
+  <input type="hidden" name="product_id" value="{{ product[0] }}" />
+  <input type="submit" value="削除" />
+</form>
+%end
+''', nickname=nickname, product=product, rate=rate, comments=comments, my_comment=my_comment, options=options)
+
+@route('/reviews', method='post')
+def add_review():
+    user_id = request.get_cookie("user_id", secret=SECRET_KEY)
+    if user_id is None:
+        redirect('/login?message=ログインしてください。')
+    product_id = request.forms.product_id
+    if product_id is None:
+        abort(400, '該当する商品がありません。')
+    if request.forms._method == 'delete':
+        cur = conn.cursor()
+        cur.execute('DELETE FROM reviews WHERE product_id = ? AND user_id = ?;', (product_id, user_id))
+        conn.commit()
+        return redirect('/products/' + product_id)
+    rate = request.forms.rate
+    if int(rate) < 1 or int(rate) > 5:
+        abort(400, '評価の値が不正です。')
+    comment = request.forms.comment
+    if comment is None:
+        comment = ''
+    cur = conn.cursor()
+    review = cur.execute('SELECT * FROM reviews r WHERE r.product_id = ? AND r.user_id = ?', (product_id, user_id)).fetchone()
+    print(review)
+    if review is None:
+        cur.execute('INSERT INTO reviews(product_id, user_id, rate, comment) VALUES (?, ?, ?, ?)', (product_id, user_id, rate, comment))
+        conn.commit()
+    else:
+        cur.execute('UPDATE reviews SET rate = ?, comment = ? WHERE product_id = ? AND user_id = ?', (rate, comment, product_id, user_id))
+        conn.commit()
+    redirect('/products/' + product_id)
 
 run(host='localhost', port=8080, debug=True, reloader=True)
