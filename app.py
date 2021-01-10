@@ -55,19 +55,39 @@ def list_products():
     if nickname is None:
         redirect('/login?message=ログインしてください。')
     cur = conn.cursor()
-    results = cur.execute('SELECT p.name, p.description, p.image_url, p.price_yen, IFNULL(ROUND(AVG(r.rate), 1), "無し") FROM products AS p LEFT OUTER JOIN reviews AS r ON p.id = r.product_id GROUP BY p.id;')
+    results = cur.execute('SELECT p.id, p.name, p.description, p.image_url, p.price_yen, IFNULL(ROUND(AVG(r.rate), 1), "無し") FROM products AS p LEFT OUTER JOIN reviews AS r ON p.id = r.product_id GROUP BY p.id;')
     return template('''
 <p>ようこそ、{{ nickname }}さん（<a href="/logout">ログアウト</a>）</p>
 <h1>商品一覧</h1>
 <table border="1">
   <tr>
-    <th>商品名</th><th>説明</th><th>画像</th><th>価格</th><th>評価</th>
+    <th>商品名</th><th>説明</th><th>画像</th><th>価格</th><th>評価</th><th>操作</th>
   </tr>
   %for p in products:
   <tr>
-    <td>{{ p[0] }}</td><td>{{ p[1] }}</td><td><img src="{{ p[2] }}"</td><td>{{ p[3] }}円</td><td>{{ p[4] }}</td>
+    <td>{{ p[1] }}</td><td>{{ p[2] }}</td><td><img src="{{ p[3] }}"</td><td>{{ p[4] }}円</td><td>{{ p[5] }}</td><td><a href="/products/{{ p[0] }}">詳細</a></td>
   </tr>
   %end
 </table>''', nickname=nickname, products=results)
+
+@route('/products/<product_id>')
+def show_product(product_id):
+    nickname = request.get_cookie("nickname", secret=SECRET_KEY)
+    if nickname is None:
+        redirect('/login?message=ログインしてください。')
+    cur = conn.cursor()
+    result = cur.execute('SELECT * FROM products WHERE id = ?;', (product_id,)).fetchone()
+    if result is None:
+        return '<p>該当する商品がありません。</p><p><a href="/products">商品一覧</a>へ戻る。</p>'
+    return template('''
+<p>ようこそ、{{ nickname }}さん（<a href="/logout">ログアウト</a>）</p>
+<h1>詳細</h1>
+<table border="1">
+  <tr><th>項目</th><th>内容</th></tr>
+  <tr><td>商品名</td><td>{{ product[1] }}</td></tr>
+  <tr><td>説明</td><td>{{ product[2] }}</td></tr>
+  <tr><td>画像</td><td><img src="{{ product[3] }}"></td></tr>
+  <tr><td>価格</td><td>{{ product[4] }}</td></tr>
+</table>''', nickname=nickname, product=result)
 
 run(host='localhost', port=8080)
