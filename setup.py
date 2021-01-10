@@ -33,12 +33,24 @@ for i in range(1, 10):
     users.append(('user' + str(i) + '@example.com', hash_password('password' + str(i)), 'ユーザー' + str(i)))
 cur.executemany('INSERT INTO users(email, hashed_password, nickname) values(?, ?, ?)', users)
 
+cur.execute('DROP TABLE IF EXISTS reviews;')
+cur.execute('CREATE TABLE reviews(id INTEGER PRIMARY KEY AUTOINCREMENT, product_id INTEGER, user_id INTEGER, rate INTEGER, comment STRING, foreign key(product_id) references products(id), foreign key(user_id) references users(id))')
+reviews = []
+for i in range(1, 10):
+    product_id = randrange(1, 10)
+    user_id = randrange(1, 10)
+    rate = randrange(1, 6)
+    reviews.append((product_id, user_id, rate, '...'))
+cur.executemany('INSERT INTO reviews(product_id, user_id, rate, comment) values(?, ?, ?, ?)', reviews)
 conn.commit()
 
 for row in cur.execute('SELECT * FROM products;').fetchall():
     print(row)
 
 for row in cur.execute('SELECT * FROM users;').fetchall():
+    print(row)
+
+for row in cur.execute('SELECT * FROM reviews;').fetchall():
     print(row)
 
 conn.close()

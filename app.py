@@ -5,6 +5,7 @@ import hashlib
 
 SECRET_KEY = 'MY_HIDDEN_SECRET_KEY'
 DATABASE_FILE = 'store.db'
+conn = sqlite3.connect(DATABASE_FILE)
 
 @route('/login')
 def show_login():
@@ -27,7 +28,6 @@ def is_valid_password(hashed_password, user_password):
     return password == hashlib.sha256(salt.encode() + user_password.encode()).hexdigest()
 
 def query_nickname(email, password):
-    conn = sqlite3.connect(DATABASE_FILE)
     cur = conn.cursor()
     result = cur.execute('SELECT hashed_password, nickname FROM users WHERE email = ?;', (email,)).fetchone()
     if result is not None and is_valid_password(result[0], password):
@@ -54,20 +54,18 @@ def list_products():
     nickname = request.get_cookie("nickname", secret=SECRET_KEY)
     if nickname is None:
         redirect('/login?message=ログインしてください。')
-    conn = sqlite3.connect(DATABASE_FILE)
     cur = conn.cursor()
-    results = cur.execute('SELECT * FROM products;').fetchall()
-    conn.close()
+    results = cur.execute('SELECT p.name, p.description, p.image_url, p.price_yen, IFNULL(ROUND(AVG(r.rate), 1), "無し") FROM products AS p LEFT OUTER JOIN reviews AS r ON p.id = r.product_id GROUP BY p.id;')
     return template('''
 <p>ようこそ、{{ nickname }}さん（<a href="/logout">ログアウト</a>）</p>
 <h1>商品一覧</h1>
 <table border="1">
   <tr>
-    <th>商品名</th><th>説明</th><th>画像</th><th>価格</th>
+    <th>商品名</th><th>説明</th><th>画像</th><th>価格</th><th>評価</th>
   </tr>
-  %for product in products:
+  %for p in products:
   <tr>
-    <td>{{ product[1] }}</td><td>{{ product[2] }}</td><td><img src="{{ product[3] }}"</td><td>{{ product[4] }}円</td>
+    <td>{{ p[0] }}</td><td>{{ p[1] }}</td><td><img src="{{ p[2] }}"</td><td>{{ p[3] }}円</td><td>{{ p[4] }}</td>
   </tr>
   %end
 </table>''', nickname=nickname, products=results)
