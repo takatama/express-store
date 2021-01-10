@@ -36,8 +36,8 @@ def query_user(email, password):
 
 @route('/login', method="post")
 def do_login():
-    email = request.forms.get('email')
-    password = request.forms.get('password')
+    email = request.forms.email
+    password = request.forms.password
     user_id, nickname = query_user(email, password)
     if user_id is None:
         return redirect('/login?message=ログインに失敗しました。')
