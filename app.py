@@ -44,6 +44,11 @@ def do_login():
     response.set_cookie("nickname", nickname, secret=SECRET_KEY)
     redirect('/products')
 
+@route('/logout')
+def do_logout():
+    response.set_cookie("nickname", None, secret=SECRET_KEY)
+    redirect('/login?message=ログアウトしました。')
+
 @route('/products')
 def list_products():
     nickname = request.get_cookie("nickname", secret=SECRET_KEY)
@@ -54,7 +59,7 @@ def list_products():
     results = cur.execute('SELECT * FROM products;').fetchall()
     conn.close()
     return template('''
-<p>ようこそ、{{ nickname }}さん</p>
+<p>ようこそ、{{ nickname }}さん（<a href="/logout">ログアウト</a>）</p>
 <h1>商品一覧</h1>
 <table border="1">
   <tr>
