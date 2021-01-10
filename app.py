@@ -27,20 +27,21 @@ def is_valid_password(hashed_password, user_password):
     password, salt = hashed_password.split(':')
     return password == hashlib.sha256(salt.encode() + user_password.encode()).hexdigest()
 
-def query_nickname(email, password):
+def query_user(email, password):
     cur = conn.cursor()
-    result = cur.execute('SELECT hashed_password, nickname FROM users WHERE email = ?;', (email,)).fetchone()
+    result = cur.execute('SELECT hashed_password, id, nickname FROM users WHERE email = ?;', (email,)).fetchone()
     if result is not None and is_valid_password(result[0], password):
-        return result[1]
+        return result[1], result[2]
     return None
 
 @route('/login', method="post")
 def do_login():
     email = request.forms.get('email')
     password = request.forms.get('password')
-    nickname = query_nickname(email, password)
-    if nickname is None:
+    user_id, nickname = query_user(email, password)
+    if user_id is None:
         return redirect('/login?message=ログインに失敗しました。')
+    response.set_cookie("user_id", user_id, secret=SECRET_KEY)
     response.set_cookie("nickname", nickname, secret=SECRET_KEY)
     redirect('/products')
 
@@ -70,26 +71,41 @@ def list_products():
   %end
 </table>''', nickname=nickname, products=results)
 
+def selected_option(rate):
+    html = []
+    for i in range(5, 0, -1):
+        if i == rate:
+            html.append('<option value="' + str(i) + '" selected>' + str(i) + '</option>')
+        else:
+            html.append('<option value="' + str(i) + '">' + str(i) + '</option>')
+    return ''.join(html)
+
 @route('/products/<product_id>')
 def show_product(product_id):
     nickname = request.get_cookie("nickname", secret=SECRET_KEY)
     if nickname is None:
         redirect('/login?message=ログインしてください。')
+    user_id = request.get_cookie('user_id', secret=SECRET_KEY)
     cur = conn.cursor()
     product = cur.execute('SELECT * FROM products WHERE id = ?;', (product_id,)).fetchone()
     if product is None:
         return '<p>該当する商品がありません。</p><p><a href="/products">商品一覧</a>へ戻る。</p>'
-    reviews = cur.execute('SELECT r.rate, r.comment, u.nickname FROM reviews r JOIN users u ON r.product_id = ? AND r.user_id = u.id;', (product_id,)).fetchall()
+    reviews = cur.execute('SELECT r.rate, r.comment, u.id, u.nickname FROM reviews r JOIN users u ON r.product_id = ? AND r.user_id = u.id;', (product_id,)).fetchall()
     rate = 0
     comments = []
+    my_comment = None
+    my_rate = None
     for review in reviews:
-        print(review)
         rate += review[0]
-        comments.append('【★' + str(review[0]) + '】' + review[1] + ' (' + review[2] + ')')
+        comments.append('【★' + str(review[0]) + '】' + review[1] + ' (' + review[3] + ')')
+        if review[2] == user_id:
+            my_rate = review[0]
+            my_comment = review[1]
     if rate > 0:
         rate = round(rate / len(reviews), 1)
     else:
         rate = '無し'
+    options = selected_option(my_rate)
     return template('''
 <p>ようこそ、{{ nickname }}さん（<a href="/logout">ログアウト</a>）</p>
 <h1>詳細</h1>
@@ -110,6 +126,15 @@ def show_product(product_id):
       </ul>
     </td>
   </tr>
-</table>''', nickname=nickname, product=product, rate=rate, comments=comments)
+</table>
+<form action="/comments" method="post">
+  <p>あなたの評価<select name="rate">{{ !options }}</select></p>
+%if my_comment is None:
+  <p>あなたのコメント<input type="text" /></p>
+%else:
+  <p>あなたのコメント<input type="text" value="{{ my_comment }}" /></p>
+%end
+  <p><input type="submit" value="投稿" /></p>
+</form>''', nickname=nickname, product=product, rate=rate, comments=comments, my_comment=my_comment, options=options)
 
-run(host='localhost', port=8080)
+run(host='localhost', port=8080, debug=True, reloader=True)
