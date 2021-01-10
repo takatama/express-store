@@ -76,9 +76,18 @@ def show_product(product_id):
     if nickname is None:
         redirect('/login?message=ログインしてください。')
     cur = conn.cursor()
-    result = cur.execute('SELECT * FROM products WHERE id = ?;', (product_id,)).fetchone()
-    if result is None:
+    product = cur.execute('SELECT * FROM products WHERE id = ?;', (product_id,)).fetchone()
+    if product is None:
         return '<p>該当する商品がありません。</p><p><a href="/products">商品一覧</a>へ戻る。</p>'
+    reviews = cur.execute('SELECT * FROM reviews WHERE product_id = ?', (product_id,)).fetchall()
+    rate = 0
+    for review in reviews:
+        print(review)
+        rate += review[3]
+    if rate > 0:
+        rate = round(rate / len(reviews), 1)
+    else:
+        rate = '無し'
     return template('''
 <p>ようこそ、{{ nickname }}さん（<a href="/logout">ログアウト</a>）</p>
 <h1>詳細</h1>
@@ -88,6 +97,7 @@ def show_product(product_id):
   <tr><td>説明</td><td>{{ product[2] }}</td></tr>
   <tr><td>画像</td><td><img src="{{ product[3] }}"></td></tr>
   <tr><td>価格</td><td>{{ product[4] }}</td></tr>
-</table>''', nickname=nickname, product=result)
+  <tr><td>評価</td><td>{{ rate }}</td></tr>
+</table>''', nickname=nickname, product=product, rate=rate)
 
 run(host='localhost', port=8080)
