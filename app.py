@@ -79,11 +79,13 @@ def show_product(product_id):
     product = cur.execute('SELECT * FROM products WHERE id = ?;', (product_id,)).fetchone()
     if product is None:
         return '<p>該当する商品がありません。</p><p><a href="/products">商品一覧</a>へ戻る。</p>'
-    reviews = cur.execute('SELECT * FROM reviews WHERE product_id = ?', (product_id,)).fetchall()
+    reviews = cur.execute('SELECT r.rate, r.comment, u.nickname FROM reviews r JOIN users u ON r.product_id = ? AND r.user_id = u.id;', (product_id,)).fetchall()
     rate = 0
+    comments = []
     for review in reviews:
         print(review)
-        rate += review[3]
+        rate += review[0]
+        comments.append('【★' + str(review[0]) + '】' + review[1] + ' (' + review[2] + ')')
     if rate > 0:
         rate = round(rate / len(reviews), 1)
     else:
@@ -98,6 +100,16 @@ def show_product(product_id):
   <tr><td>画像</td><td><img src="{{ product[3] }}"></td></tr>
   <tr><td>価格</td><td>{{ product[4] }}</td></tr>
   <tr><td>評価</td><td>{{ rate }}</td></tr>
-</table>''', nickname=nickname, product=product, rate=rate)
+  <tr>
+    <td>コメント</td>
+    <td>
+      <ul style="list-style: none; padding-left: 0; margin-bottom: 0;">
+      %for comment in comments:
+        <li>{{ comment }}</li>
+      %end
+      </ul>
+    </td>
+  </tr>
+</table>''', nickname=nickname, product=product, rate=rate, comments=comments)
 
 run(host='localhost', port=8080)
