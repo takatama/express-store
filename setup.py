@@ -4,7 +4,7 @@ import uuid
 import hashlib
 
 
-DATABASE_FILE = 'store.db'
+DATABASE_FILE = 'app.db'
 
 # https://www.pythoncentral.io/hashing-strings-with-python/ より引用
 def hash_password(password):

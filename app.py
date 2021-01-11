@@ -5,7 +5,7 @@ import hashlib
 from secrets import token_urlsafe
 
 SECRET_KEY = 'MY_HIDDEN_SECRET_KEY'
-DATABASE_FILE = 'store.db'
+DATABASE_FILE = 'app.db'
 conn = sqlite3.connect(DATABASE_FILE)
 
 @route('/login')
