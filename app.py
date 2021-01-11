@@ -133,7 +133,7 @@ def show_product(product_id):
     <td>
       <ul style="list-style: none; padding-left: 0; margin-bottom: 0;">
       %for comment in comments:
-        <li>{{ comment }}</li>
+        <li>{{ !comment }}</li>
       %end
       </ul>
     </td>
@@ -165,8 +165,8 @@ def show_product(product_id):
 def add_review():
     form_token = request.forms.token
     cookie_token = request.get_cookie('token', secret=SECRET_KEY)
-    if form_token != cookie_token:
-        abort(400, '不正なアクセスです。')
+    #if form_token != cookie_token:
+    #    abort(400, '不正なアクセスです。')
     user_id = request.get_cookie("user_id", secret=SECRET_KEY)
     if user_id is None:
         redirect('/login?message=ログインしてください。')
@@ -192,6 +192,6 @@ def add_review():
     else:
         cur.execute('UPDATE reviews SET rate = ?, comment = ? WHERE product_id = ? AND user_id = ?', (rate, comment, product_id, user_id))
         conn.commit()
-    redirect('/products/' + product_id)
+    redirect('/products')
 
 run(host='localhost', port=8080, debug=True, reloader=True)
