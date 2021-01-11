@@ -67,7 +67,7 @@ def list_products():
   </tr>
   %for p in products:
   <tr>
-    <td>{{ p[1] }}</td><td>{{ p[2] }}</td><td><img src="{{ p[3] }}"</td><td>{{ p[4] }}円</td><td>{{ p[5] }}</td><td><a href="/products/{{ p[0] }}">詳細</a></td>
+    <td>{{ p[1] }}</td><td>{{ p[2] }}</td><td><img src="{{ p[3] }}"</td><td>{{ p[4] }}円</td><td>{{ p[5] }}</td><td><p><a href="/products/{{ p[0] }}">詳細</a></p><p><a href="#" onclick="alert('{{ p[1] }}を購入しました')">購入</a></p></td>
   </tr>
   %end
 </table>''', nickname=nickname, products=results)
@@ -130,6 +130,7 @@ def show_product(product_id):
     </td>
   </tr>
 </table>
+<p><button onclick="alert('{{ product[1] }} を購入しました。')">購入</button></p>
 <form action="/reviews" method="post">
   <p>あなたの評価<select name="rate">{{ !options }}</select></p>
 %if my_comment is None:
