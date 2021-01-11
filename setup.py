@@ -44,6 +44,9 @@ for i in range(1, 10):
     rate = randrange(1, 6)
     reviews.append((product_id, user_id, rate, '...'))
 cur.executemany('INSERT INTO reviews(product_id, user_id, rate, comment) values(?, ?, ?, ?)', reviews)
+
+cur.execute('DROP VIEW IF EXISTS rated_products;')
+cur.execute('CREATE VIEW rated_products as SELECT p.id, p.name, p.description, p.image_url, p.price_yen, IFNULL(ROUND(AVG(r.rate), 1), "無し") FROM products AS p LEFT OUTER JOIN reviews AS r ON p.id = r.product_id GROUP BY p.id')
 conn.commit()
 
 for row in cur.execute('SELECT * FROM products;').fetchall():
@@ -53,6 +56,9 @@ for row in cur.execute('SELECT * FROM users;').fetchall():
     print(row)
 
 for row in cur.execute('SELECT * FROM reviews;').fetchall():
+    print(row)
+
+for row in cur.execute('SELECT * FROM rated_products;').fetchall():
     print(row)
 
 conn.close()

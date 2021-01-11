@@ -60,9 +60,10 @@ def list_products():
     query = request.query.q
     print(query)
     if query is not None:
-        results = cur.execute('SELECT p.id, p.name, p.description, p.image_url, p.price_yen, IFNULL(ROUND(AVG(r.rate), 1), "無し") FROM products AS p LEFT OUTER JOIN reviews AS r ON p.id = r.product_id GROUP BY p.id HAVING p.name LIKE ?;', ('%' + query + '%',)).fetchall()
+        results = cur.execute('SELECT * FROM rated_products WHERE name LIKE ?;', ('%' + query + '%',)).fetchall()
     else:
-        results = cur.execute('SELECT p.id, p.name, p.description, p.image_url, p.price_yen, IFNULL(ROUND(AVG(r.rate), 1), "無し") FROM products AS p LEFT OUTER JOIN reviews AS r ON p.id = r.product_id GROUP BY p.id;').fetchAll()
+        results = cur.execute('SELECT * FROM rated_products;').fetchAll()
+    print(results)
     return template('''
 <p>ようこそ、{{ nickname }}さん（<a href="/logout">ログアウト</a>）</p>
 <h1>商品一覧</h1>
@@ -164,8 +165,6 @@ def show_product(product_id):
 def add_review():
     form_token = request.forms.token
     cookie_token = request.get_cookie('token', secret=SECRET_KEY)
-    print(form_token)
-    print(cookie_token)
     if form_token != cookie_token:
         abort(400, '不正なアクセスです。')
     user_id = request.get_cookie("user_id", secret=SECRET_KEY)
@@ -187,7 +186,6 @@ def add_review():
         comment = ''
     cur = conn.cursor()
     review = cur.execute('SELECT * FROM reviews r WHERE r.product_id = ? AND r.user_id = ?', (product_id, user_id)).fetchone()
-    print(review)
     if review is None:
         cur.execute('INSERT INTO reviews(product_id, user_id, rate, comment) VALUES (?, ?, ?, ?)', (product_id, user_id, rate, comment))
         conn.commit()
