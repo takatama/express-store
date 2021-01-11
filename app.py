@@ -60,9 +60,9 @@ def list_products():
     query = request.query.q
     print(query)
     if query is not None:
-        results = cur.execute('SELECT * FROM rated_products WHERE name LIKE ?;', ('%' + query + '%',)).fetchall()
+        results = cur.execute("SELECT * FROM rated_products WHERE name LIKE ?;", ("%" + query + "%",)).fetchall()
     else:
-        results = cur.execute('SELECT * FROM rated_products;').fetchAll()
+        results = cur.execute('SELECT * FROM rated_products;').fetchall()
     print(results)
     return template('''
 <p>ようこそ、{{ nickname }}さん（<a href="/logout">ログアウト</a>）</p>
