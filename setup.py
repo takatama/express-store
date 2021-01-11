@@ -5,6 +5,7 @@ import hashlib
 
 
 DATABASE_FILE = 'app.db'
+EVIL_DATABASE_FILE = 'evil.db'
 
 # https://www.pythoncentral.io/hashing-strings-with-python/ より引用
 def hash_password(password):
@@ -13,6 +14,7 @@ def hash_password(password):
 
 # append mode。もしファイルが存在していなければ作成する。
 open(DATABASE_FILE, 'a').close()
+open(EVIL_DATABASE_FILE, 'a').close()
 
 conn = sqlite3.connect(DATABASE_FILE)
 cur = conn.cursor()
@@ -54,3 +56,9 @@ for row in cur.execute('SELECT * FROM reviews;').fetchall():
     print(row)
 
 conn.close()
+
+evil_conn = sqlite3.connect(EVIL_DATABASE_FILE)
+evil_cur = evil_conn.cursor()
+evil_cur.execute('DROP TABLE IF EXISTS users;')
+evil_cur.execute('CREATE TABLE users(id INTEGER PRIMARY KEY AUTOINCREMENT, datetime STRING, email STRING, password STRING);')
+evil_conn.commit()

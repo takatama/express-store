@@ -12,7 +12,7 @@ conn = sqlite3.connect(DATABASE_FILE)
 def show_login():
     return template('''
 <h1>ログイン</h1>
-<p style="color:red;"> {{ !message }} </p>
+<p style="color:red;"> {{ message }} </p>
 <form action="/login" method="post">
 <p>メールアドレス <input name="email" type="text" placeholder="user1@example.com" value="user1@example.com" /></p>
 <p>パスワード <input name="password" type="password" placeholder="password1" value="password1" /></p>
