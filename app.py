@@ -126,7 +126,7 @@ def show_product(product_id):
   <tr><td>商品名</td><td>{{ product[1] }}</td></tr>
   <tr><td>説明</td><td>{{ product[2] }}</td></tr>
   <tr><td>画像</td><td><img src="{{ product[3] }}"></td></tr>
-  <tr><td>価格</td><td>{{ product[4] }}</td></tr>
+  <tr><td>価格</td><td>{{ product[4] }}円</td></tr>
   <tr><td>評価</td><td>{{ rate }}</td></tr>
   <tr>
     <td>コメント</td>

@@ -52,6 +52,15 @@ http://localhost:8080/login?message=<script>window.onload=function(){document.qu
 http://localhost:8081/evil_game1
 ```
 
+```diff:app.py
+-        <li>{{ comment }}</li>
++        <li>{{ !comment }}</li>
+```
+
+```
+http://localhost:8081/evil_game2
+```
+
 # DOM based XSS
 
 
