@@ -57,10 +57,18 @@ def list_products():
     if nickname is None:
         redirect('/login?message=ログインしてください。')
     cur = conn.cursor()
-    results = cur.execute('SELECT p.id, p.name, p.description, p.image_url, p.price_yen, IFNULL(ROUND(AVG(r.rate), 1), "無し") FROM products AS p LEFT OUTER JOIN reviews AS r ON p.id = r.product_id GROUP BY p.id;')
+    query = request.query.q
+    print(query)
+    if query is not None:
+        results = cur.execute('SELECT p.id, p.name, p.description, p.image_url, p.price_yen, IFNULL(ROUND(AVG(r.rate), 1), "無し") FROM products AS p LEFT OUTER JOIN reviews AS r ON p.id = r.product_id GROUP BY p.id HAVING p.name LIKE ?;', ('%' + query + '%',)).fetchall()
+    else:
+        results = cur.execute('SELECT p.id, p.name, p.description, p.image_url, p.price_yen, IFNULL(ROUND(AVG(r.rate), 1), "無し") FROM products AS p LEFT OUTER JOIN reviews AS r ON p.id = r.product_id GROUP BY p.id;').fetchAll()
     return template('''
 <p>ようこそ、{{ nickname }}さん（<a href="/logout">ログアウト</a>）</p>
 <h1>商品一覧</h1>
+<form action="/products" method="get">
+  <p>商品名で検索 <input type="text" name="q" value="{{ query }}" /><input type="submit" value="検索" />
+</form>
 <table border="1">
   <tr>
     <th>商品名</th><th>説明</th><th>画像</th><th>価格</th><th>評価</th><th>操作</th>
@@ -70,7 +78,7 @@ def list_products():
     <td>{{ p[1] }}</td><td>{{ p[2] }}</td><td><img src="{{ p[3] }}"</td><td>{{ p[4] }}円</td><td>{{ p[5] }}</td><td><p><a href="/products/{{ p[0] }}">詳細</a></p><p><a href="#" onclick="alert('{{ p[1] }}を購入しました')">購入</a></p></td>
   </tr>
   %end
-</table>''', nickname=nickname, products=results)
+</table>''', nickname=nickname, products=results, query=query)
 
 def selected_option(rate):
     html = []
