@@ -1,4 +1,4 @@
-from bottle import route, run, template, request, redirect, response, abort
+from bottle import route, run, template, request, redirect, response, abort, hook
 import sqlite3
 import uuid
 import hashlib
@@ -193,5 +193,9 @@ def add_review():
         cur.execute('UPDATE reviews SET rate = ?, comment = ? WHERE product_id = ? AND user_id = ?', (rate, comment, product_id, user_id))
         conn.commit()
     redirect('/products')
+
+@hook('after_request')
+def protect():
+    response.headers['X-Frame-Options'] = 'DENY'
 
 run(host='localhost', port=8080, debug=True, reloader=True)

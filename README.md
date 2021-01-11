@@ -61,8 +61,16 @@ http://localhost:8081/evil_game1
 http://localhost:8081/evil_game2
 ```
 
+# Clickjacking
+
+```diff:app.py
+-    response.headers['X-Frame-Options'] = 'DENY'
++   response.headers['X-Frame-Option'] = 'DENY'
+```
+
+```
+http://localhost:8081/evil_game3
+```
+
 # DOM based XSS
-
-
-# Clickjucking
 

@@ -56,4 +56,19 @@ def show_game2():
   <input type="submit" value="遊んでみる" />
 </form>'''
 
+@route('/evil_game3')
+def show_game3():
+    return '''
+<p>下の方に面白いゲームが遊べるボタンがあるよ！ちゃんと押せるかな？？</p>
+<p><input type="checkbox" onchange="invisible(this.checked)">消す</p>
+<iframe src="http://localhost:8080/products" width="800" height="1200"></iframe>
+<button style="position:absolute; top:370; left:395; z-index:-1;">あそんでみる</button>
+<script>function invisible(checked) {
+    const iframe = document.querySelector('iframe');
+    if (checked) {
+        iframe.style = 'opacity:0; filter:alpha(opacity=0);';
+    } else {
+        iframe.style = '';
+    }
+}</script>'''
 run(host='localhost', port=8081, debug=True, reloader=True)
