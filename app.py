@@ -111,7 +111,7 @@ def show_product(product_id):
     response.set_cookie('token', token, secret=SECRET_KEY, path='/')
     return template('''
 <p>ようこそ、{{ nickname }}さん（<a href="/logout">ログアウト</a>）</p>
-<h1>詳細</h1>
+<h1><a href="/products">商品一覧</a> > {{ product[1] }}</h1>
 <table border="1">
   <tr><th>項目</th><th>内容</th></tr>
   <tr><td>商品名</td><td>{{ product[1] }}</td></tr>
