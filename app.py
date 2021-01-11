@@ -2,6 +2,7 @@ from bottle import route, run, template, request, redirect, response, abort
 import sqlite3
 import uuid
 import hashlib
+from secrets import token_urlsafe
 
 SECRET_KEY = 'MY_HIDDEN_SECRET_KEY'
 DATABASE_FILE = 'store.db'
@@ -106,6 +107,8 @@ def show_product(product_id):
     else:
         rate = '無し'
     options = selected_option(my_rate)
+    token = token_urlsafe()
+    response.set_cookie('token', token, secret=SECRET_KEY, path='/')
     return template('''
 <p>ようこそ、{{ nickname }}さん（<a href="/logout">ログアウト</a>）</p>
 <h1>詳細</h1>
@@ -136,18 +139,26 @@ def show_product(product_id):
 %end
   <p><input type="submit" value="投稿" /></p>
   <input type="hidden" name="product_id" value="{{ product[0] }}" />
+  <input type="hidden" name="token" value="{{ token }}" />
 </form>
 %if my_comment is not None:
 <form action="/reviews" method="post">
   <input type="hidden" name="_method" value="delete" />
   <input type="hidden" name="product_id" value="{{ product[0] }}" />
+  <input type="hidden" name="token" value="{{ token }}" />
   <input type="submit" value="削除" />
 </form>
 %end
-''', nickname=nickname, product=product, rate=rate, comments=comments, my_comment=my_comment, options=options)
+''', nickname=nickname, product=product, rate=rate, comments=comments, my_comment=my_comment, options=options, token=token)
 
 @route('/reviews', method='post')
 def add_review():
+    form_token = request.forms.token
+    cookie_token = request.get_cookie('token', secret=SECRET_KEY)
+    print(form_token)
+    print(cookie_token)
+    if form_token != cookie_token:
+        abort(400, '不正なアクセスです。')
     user_id = request.get_cookie("user_id", secret=SECRET_KEY)
     if user_id is None:
         redirect('/login?message=ログインしてください。')
@@ -158,7 +169,7 @@ def add_review():
         cur = conn.cursor()
         cur.execute('DELETE FROM reviews WHERE product_id = ? AND user_id = ?;', (product_id, user_id))
         conn.commit()
-        return redirect('/products/' + product_id)
+        redirect('/products/' + product_id)
     rate = request.forms.rate
     if int(rate) < 1 or int(rate) > 5:
         abort(400, '評価の値が不正です。')
