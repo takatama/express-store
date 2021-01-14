@@ -2,15 +2,15 @@ import sqlite3
 from random import randrange
 import uuid
 import hashlib
+from bcrypt import gensalt, hashpw
 
 
 DATABASE_FILE = 'app.db'
 EVIL_DATABASE_FILE = 'evil.db'
 
-# https://www.pythoncentral.io/hashing-strings-with-python/ より引用
 def hash_password(password):
-    salt = uuid.uuid4().hex
-    return hashlib.sha256(salt.encode() + password.encode()).hexdigest() + ':' + salt
+    salt = gensalt()
+    return hashpw(password.encode('utf-8'), salt).decode()
 
 # append mode。もしファイルが存在していなければ作成する。
 open(DATABASE_FILE, 'a').close()

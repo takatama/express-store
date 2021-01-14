@@ -3,6 +3,7 @@ import sqlite3
 import uuid
 import hashlib
 from secrets import token_urlsafe
+from bcrypt import gensalt, hashpw, checkpw
 
 SECRET_KEY = 'MY_HIDDEN_SECRET_KEY'
 DATABASE_FILE = 'app.db'
@@ -19,20 +20,18 @@ def show_login():
 <p><input value="ログイン" type="submit" /></p>
 </form>''', message=request.query.message)
 
-# https://www.pythoncentral.io/hashing-strings-with-python/ より引用
 def hash_password(password):
-    salt = uuid.uuid4().hex
-    return hashlib.sha256(salt.encode() + password.encode()).hexdigest() + ':' + salt
-    
-def is_valid_password(hashed_password, user_password):
-    password, salt = hashed_password.split(':')
-    return password == hashlib.sha256(salt.encode() + user_password.encode()).hexdigest()
+    salt = gensalt()
+    return hashpw(password.encode('utf-8'), salt).decode()
+
+def is_valid_password(user_password, hashed_password):
+    return checkpw(user_password.encode('utf-8'), hashed_password.encode('utf-8'))
 
 def query_user(email, password):
     cur = conn.cursor()
-    result = cur.execute('SELECT hashed_password, id, nickname FROM users WHERE email = ?;', (email,)).fetchone()
-    if result is not None and is_valid_password(result[0], password):
-        return result[1], result[2]
+    hashed_password, user_id, nickname = cur.execute('SELECT hashed_password, id, nickname FROM users WHERE email = ?;', (email,)).fetchone()
+    if hashed_password is not None and is_valid_password(password, hashed_password):
+        return user_id, nickname
     return None
 
 @route('/login', method="post")
