@@ -110,7 +110,7 @@ SELECT * FROM <商品テーブル名> LIKE '%x' UNION SELECT 1, tbl_name, sql, 1
 http://localhost:8080/products?q=x%' UNION SELECT 1, id, email, 1, hashed_password, nickname FROM users--
 ```
 
-usersテーブルのid、email、hashed_password、nicknameが漏洩してしまいました。かろうじてパスワードはハッシュ化されています。パスワードを平文のまま保存していたら大変なことになっていましたが、時間稼ぎにしかなりません。
+usersテーブルのid、email、hashed_password、nicknameが漏洩してしまいました。かろうじてパスワードをハッシュ化していましたが、平文で保存していたら目も当てられません。
 
 ### SQLインジェクションを防ぐには
 
@@ -158,7 +158,7 @@ http://localhost:8081/users
 
 ### XSSを防ぐには
 
-エスケープ漏れをなくしましょう！
+意図しないエスケープ漏れをなくしましょう！
 
 ## クロスサイト・リクエストフォージェリ（CSRF）と蓄積型クロスサイトスクリプティング（Persistent XSS）の合わせ技
 
@@ -171,7 +171,7 @@ http://localhost:8081/users
 +    #    abort(400, '不正なアクセスです。')
 ```
 
-正規の流れでは、ユーザーがフォームを開いてから情報を投稿しますが、それ以外のやり方で投稿できるようになってしまいました。
+ユーザーがWebブラウザーでフォームを開いてから情報を投稿するのが正規の流れですが、それ以外のやり方で投稿できるようになってしまいました。
 
 攻撃者は攻撃サイトを準備し、甘い言葉で正規のユーザーにクリックを促します。
 
@@ -256,6 +256,6 @@ http://localhost:8081/evil_game3
 
 ### Clickjackingを防ぐには
 
-X-Frame-Optionsを正しく設定しましょう！
+X-Frame-Optionsヘッダーを正しく設定しましょう！
 
 
