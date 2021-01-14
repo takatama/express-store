@@ -1,12 +1,37 @@
 # bottle-store
- EC site example using Python bottle.
 
-## 事前準備
-Windowsの場合
+EC site example using Python bottle.
+
+## はじめかた（Windows）
+
+PythonとVSCodeをインストールします。
+
+仮想環境を作ります。仮想環境名は```venv```とします。
 
 ```console
-set STORE_SECRET_KEY=<署名付きcookieのための鍵（文字列）>
+> py -m venv venv
+(venv)>
 ```
+
+必要なモジュールをインストールします。
+
+```console
+(venv)> pip install -r requirements.txt
+```
+
+署名付きcookieのための鍵を環境変数```STORE_SECRET_KEY```に設定します（設定し忘れるとRuntimeErrorが発生します）。
+
+```console
+(venv)> set STORE_SECRET_KEY=<署名付きcookieのための鍵（文字列）>
+```
+
+サーバーを起動します。localhost:8080で立ち上がります。
+
+```console
+(venv)> py app.py
+```
+
+Webブラウザーで http://localhost:8080/ にアクセスすると使えます。
 
 # SQL Injection
 
