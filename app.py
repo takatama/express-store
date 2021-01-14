@@ -81,15 +81,6 @@ def list_products():
   %end
 </table>''', nickname=nickname, products=results, query=query)
 
-def selected_option(rate):
-    html = []
-    for i in range(5, 0, -1):
-        if i == rate:
-            html.append('<option value="' + str(i) + '" selected>' + str(i) + '</option>')
-        else:
-            html.append('<option value="' + str(i) + '">' + str(i) + '</option>')
-    return ''.join(html)
-
 @route('/products/<product_id>')
 def show_product(product_id):
     nickname = request.get_cookie("nickname", secret=SECRET_KEY)
@@ -115,7 +106,6 @@ def show_product(product_id):
         rate = round(rate / len(reviews), 1)
     else:
         rate = '無し'
-    options = selected_option(my_rate)
     token = token_urlsafe()
     response.set_cookie('token', token, secret=SECRET_KEY, path='/')
     return template('''
@@ -141,7 +131,13 @@ def show_product(product_id):
 </table>
 <p><button onclick="alert('{{ product[1] }} を購入しました。')">購入</button></p>
 <form action="/reviews" method="post">
-  <p>あなたの評価<select name="rate">{{ !options }}</select></p>
+  <p>あなたの評価
+    <select name="rate">
+    %for i in range(5, 0, -1):
+      <option value="{{ str(i) }}" {{ 'selected' if i == my_rate else '' }}>{{ str(i) }}</option>
+    %end
+    </select>
+  </p>
 %if my_comment is None:
   <p>あなたのコメント<input type="text" name="comment" /></p>
 %else:
@@ -159,7 +155,7 @@ def show_product(product_id):
   <input type="submit" value="削除" />
 </form>
 %end
-''', nickname=nickname, product=product, rate=rate, comments=comments, my_comment=my_comment, options=options, token=token)
+''', nickname=nickname, product=product, rate=rate, comments=comments, my_rate=my_rate, my_comment=my_comment, token=token)
 
 @route('/reviews', method='post')
 def add_review():
