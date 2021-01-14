@@ -182,6 +182,17 @@ http://localhost:8081/users
 - XSS game https://xss-game.appspot.com/
 - prompt(1) to win - 0x0 https://prompt.ml/0
 
+### 反射型XSSのさらなる対策
+
+Webブラウザーが持つセキュリティ機能を、Webアプリ側が強制的に有効にする方法があります。
+
+- X-XSS-Protectionヘッダー
+  - 1にすると、WebブラウザーのXSSフィルターを有効にします。また、mode=blockを指定するとXSSを検出した時にWebページの表示を停止できます。
+  - ```X-XSS-Protection: 1; mode=block```
+- Content-Security-Policyヘッダー
+  - 様々なセキュリティポリシーを設定できます。例えば、全てのリソースを同じドメインからのみ取得させるには次のように指定します。
+  - ```Content-Security-Policy: default-src 'self'```
+
 ## クロスサイト・リクエストフォージェリ（CSRF）と蓄積型クロスサイトスクリプティング（Persistent XSS）の合わせ技
 
 ```app.py```を次のよう書き換えます。```form_token```と```cookie_token```のチェックをなくします。```form_token```はフォームに埋め込んだトークンです。フォームに情報が投稿されるときに一緒にWebアプリに渡されます。同じ値が署名付きcookieに格納されていて、Webアプリはそれぞれが同じ値かどうかをチェックしています。
