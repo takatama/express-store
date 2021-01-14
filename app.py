@@ -203,4 +203,4 @@ def add_review():
 def protect():
     response.headers['X-Frame-Options'] = 'DENY'
 
-run(host='localhost', port=8080, debug=True, reloader=True)
+run(host='localhost', port=8080, reloader=True)
