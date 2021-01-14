@@ -4,12 +4,18 @@ bottle.pyを使ったECサイトのデモンストレーションです。ソー
 
 Windowsを利用する前提で説明します。
 
+## Webセキュリティについての基礎知識
+
+[こちら](/web-security.md)をご覧ください。
+
 ## はじめかた（Windows）
 
 まずPython3をインストールします。
 
 Visual Studio Code を使用して Python 初心者向けの開発環境をセットアップする
 https://docs.microsoft.com/ja-jp/learn/modules/python-install-vscode/
+
+2921/01/10時点ではPython 3.9.1が最新でした。
 
 Python3のインストールが完了したら、仮想環境を作ります。仮想環境名は```venv```とします。
 
