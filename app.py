@@ -13,6 +13,10 @@ if SECRET_KEY is None:
 DATABASE_FILE = 'app.db'
 conn = sqlite3.connect(DATABASE_FILE)
 
+@route('/')
+def redirect_to_products():
+    redirect('/products')
+
 @route('/login')
 def show_login():
     return template('''
