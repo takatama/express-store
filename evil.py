@@ -71,4 +71,4 @@ def show_game3():
         iframe.style = '';
     }
 }</script>'''
-run(host='localhost', port=8081, debug=True, reloader=True)
+run(host='localhost', port=8081, reloader=True)

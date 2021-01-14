@@ -151,7 +151,9 @@ http://localhost:8080/login?message=<script>window.onload=function(){document.qu
 
 エスケープ漏れをなくしましょう！
 
-# CSRF and Persistent XSS
+## クロスサイト・リクエストフォージェリ（CSRF）と蓄積型クロスサイトスクリプティング（Persistent XSS）の合わせ技
+
+```app.py```を次のよう書き換えます。```form_token```と```cookie_token```のチェックをなくします。
 
 ```diff:app.py
 -    if form_token != cookie_token:
@@ -160,18 +162,67 @@ http://localhost:8080/login?message=<script>window.onload=function(){document.qu
 +    #    abort(400, '不正なアクセスです。')
 ```
 
+```form_token```はフォームに埋め込んだトークンです。フォームに情報が投稿されるときに一緒にWebアプリに渡されます。同じ値が署名付きcookieに格納されていて、Webアプリはそれぞれが同じ値かどうかをチェックしています。ユーザーがフォームを開いてから情報を投稿するのが正規の流れになりますが、それ以外のやり方で投稿できるようになってしまいます。
+
+攻撃者は攻撃サイトを準備し、甘い言葉で正規のユーザーにクリックを促します。
+
 ```
 http://localhost:8081/evil_game1
 ```
+
+クリックすると、ユーザーが意図しない投稿をしてしまうフォームになっています。評価を釣り上げる作戦です。
+
+```html
+<form action="http://localhost:8080/reviews" method="post">
+  <input type="hidden" name="product_id" value="1" />
+  <input type="hidden" name="user_id" value="1" />
+  <input type="hidden" name="rate" value="5" />
+  <input type="hidden" name="comment" value="最高の商品です！本当は★100を付けたいくらい！" />
+  <input type="submit" value="遊んでみる" />
+</form>
+```
+
+ユーザーはゲームで遊ぼうと攻撃者のサイトでボタンをクリックしただけなのに、商品1に高評価をつけてしまいます。ユーザーに意図しない情報を投稿させてしまう攻撃がクロスサイト・リクエストフォージェリ（CSRF）です。
+
+```
+http://localhost:8080/products/1
+```
+
+さらに```app.py```を書き換え、```comment```のエスケープを外します。これで、商品の詳細ページにXSSが可能になってしまいます。
 
 ```diff:app.py
 -        <li>{{ comment }}</li>
 +        <li>{{ !comment }}</li>
 ```
 
+攻撃者は攻撃サイトを準備し、甘い言葉で正規のユーザーにクリックを促します。
+
 ```
 http://localhost:8081/evil_game2
 ```
+
+クリックすると、ユーザーが意図しない投稿をしてしまうフォームになっています。評価を釣り上げるだけでなく、XSSでページを書き換え、うその金額に変更してしまいます。window.onload はページの読み込みが終了すると実行されます。
+
+```html
+<form action="http://localhost:8080/reviews" method="post">
+  <input type="hidden" name="product_id" value="1" />
+  <input type="hidden" name="user_id" value="1" />
+  <input type="hidden" name="rate" value="5" />
+  <input type="hidden" name="comment" value="本当は★100を付けたいくらい最高の商品なのに、今だけ100円で売ってます！！<script>window.onload=function(){
+      var td = document.querySelectorAll('tr td')[7];
+      td.innerHTML = '<s>' + td.innerHTML + '</s><b>今だけ100円！！</b>';
+  }</script>" />
+  <input type="submit" value="遊んでみる" />
+</form>
+```
+
+ユーザーが意図せずに投稿してしまったスクリプト付きコメントは、ユーザー本人はもちろん、他のユーザーがこのコメントを閲覧した時にも実行されてしまいます。
+
+反射型XSSは、スクリプトが仕込まれたURLをクリックした人だけに影響しました。しかし、蓄積型XSSはその他すべての人に影響してしまいます。
+
+### CSRFを防ぐには
+
+ユーザーが投稿する情報にtokenを埋め込み、正規の投稿かどうかを確認しましょう。
 
 # Clickjacking
 
