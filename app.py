@@ -4,8 +4,12 @@ import uuid
 import hashlib
 from secrets import token_urlsafe
 from bcrypt import gensalt, hashpw, checkpw
+from os import environ
 
-SECRET_KEY = 'MY_HIDDEN_SECRET_KEY'
+SECRET_KEY = environ.get('STORE_SECRET_KEY')
+if SECRET_KEY is None:
+    raise RuntimeError('環境変数 STORE_SECRET_KEY が設定されていません。')
+
 DATABASE_FILE = 'app.db'
 conn = sqlite3.connect(DATABASE_FILE)
 

@@ -1,6 +1,13 @@
 # bottle-store
  EC site example using Python bottle.
 
+## 事前準備
+Windowsの場合
+
+```console
+set STORE_SECRET_KEY=<署名付きcookieのための鍵（文字列）>
+```
+
 # SQL Injection
 
 ```diff:app.py
