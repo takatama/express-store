@@ -100,6 +100,9 @@ Internal Server Errorが表示され、攻撃者が入力したSQL文の断片�
 
 次に攻撃者はデータベースで管理しているテーブルの情報を引き出そうと試みます。SQLiteの場合は特別なテーブル```sqlite_master```から、データベースのメタ情報を引き出すことが可能です。
 
+> The Schema Table
+> https://sqlite.org/schematab.html
+
 ```
 http://localhost:8080/products?q=x%' UNION SELECT 1, tbl_name, sql, 1, 1, 1 FROM sqlite_master--
 ```
@@ -121,6 +124,14 @@ usersテーブルのid、email、hashed_password、nicknameが漏洩してしま
 ### SQLインジェクションを防ぐには
 
 絶対にプレースホルダーを使いましょう！
+
+### 参考情報
+
+> SQLインジェクションによりクレジットカード情報を盗むデモンストレーション（Type1）
+> 
+> https://www.youtube.com/watch?v=Vvgmeu128ak
+> 
+> [![](http://img.youtube.com/vi/Vvgmeu128ak/0.jpg)](http://www.youtube.com/watch?v=Vvgmeu128ak "")
 
 ## 反射型クロスサイトスクリプティング（Reflected XSS）
 
@@ -165,6 +176,11 @@ http://localhost:8081/users
 ### XSSを防ぐには
 
 意図しないエスケープ漏れをなくしましょう！
+
+攻撃者は様々な手法で不正アクセスを試みます。XSSのゲームを通じて手法を学びつつ、セキュリティ診断ツールも活用してセキュリティを確保しましょう。
+
+- XSS game https://xss-game.appspot.com/
+- prompt(1) to win - 0x0 https://prompt.ml/0
 
 ## クロスサイト・リクエストフォージェリ（CSRF）と蓄積型クロスサイトスクリプティング（Persistent XSS）の合わせ技
 
