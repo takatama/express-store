@@ -42,15 +42,15 @@ def do_login():
     user_id, nickname = query_user(email, password)
     if user_id is None:
         return redirect('/login?message=ログインに失敗しました。')
-    response.set_cookie("user_id", user_id, secret=SECRET_KEY)
-    response.set_cookie("nickname", nickname, secret=SECRET_KEY)
+    response.set_cookie('user_id', user_id, secret=SECRET_KEY, path='/', httponly=True)
+    response.set_cookie('nickname', nickname, secret=SECRET_KEY, path='/', httponly=True)
     redirect('/products')
 
 @route('/logout')
 def do_logout():
-    response.delete_cookie('user_id', path='/', secret=SECRET_KEY)
-    response.delete_cookie('nickname', path='/', secret=SECRET_KEY)
-    response.delete_cookie('token', path='/', secret=SECRET_KEY)
+    response.delete_cookie('user_id', secret=SECRET_KEY, path='/')
+    response.delete_cookie('nickname', secret=SECRET_KEY, path='/')
+    response.delete_cookie('token', secret=SECRET_KEY, path='/')
     redirect('/login?message=ログアウトしました。')
 
 @route('/products')
@@ -109,7 +109,7 @@ def show_product(product_id):
     else:
         rate = '無し'
     token = token_urlsafe()
-    response.set_cookie('token', token, secret=SECRET_KEY, path='/')
+    response.set_cookie('token', token, secret=SECRET_KEY, path='/', httponly=True)
     return template('''
 <p>ようこそ、{{ nickname }}さん（<a href="/logout">ログアウト</a>）</p>
 <h1><a href="/products">商品一覧</a> > {{ product[1] }}</h1>
