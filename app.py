@@ -48,7 +48,9 @@ def do_login():
 
 @route('/logout')
 def do_logout():
-    response.set_cookie("nickname", None, secret=SECRET_KEY)
+    response.delete_cookie('user_id', path='/', secret=SECRET_KEY)
+    response.delete_cookie('nickname', path='/', secret=SECRET_KEY)
+    response.delete_cookie('token', path='/', secret=SECRET_KEY)
     redirect('/login?message=ログアウトしました。')
 
 @route('/products')
