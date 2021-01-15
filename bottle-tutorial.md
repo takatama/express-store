@@ -3,6 +3,7 @@
 Webアプリ開発に慣れている方は、公式のチュートリアルを試してください。
 
 > Tutorial: Todo-List Application — Bottle 0.13-dev documentation
+> 
 > https://bottlepy.org/docs/dev/tutorial_app.html
 
 次からは、Webセキュリティの解説で必要になる最低限の機能を紹介していきます。https://bottlepy.org/docs/dev/tutorial.html からの抜粋です。
@@ -210,7 +211,7 @@ for i in range(count):
 %end
 ```
 
-これをWebアプリとして実装シ、URLでnameとcountを渡すようにすると、```hello.py```は次のようになります。URLの```count```は文字列なので```int(count)```で整数に変換しています。
+これをWebアプリとして実装し、URLでnameとcountを渡すようにすると、```hello.py```は次のようになります。URLの```count```は文字列なので```int(count)```で整数に変換しています。
 
 ```python
 from bottle import route, run, template
@@ -308,6 +309,7 @@ Webアプリでクッキーの値を参照するには、```request.get_cookie('
 参照には```request.cookies.decode().get('<key名>')```を使う必要があります。
 
 > Python + Bottleで、フォームやCookieに日本語を設定したら文字化けした
+> 
 > https://thinkami.hatenablog.com/entry/2017/04/09/180835
 
 変更したコードでは```import```に```response```を追加しています。また```redirect```も追加しています。POSTでフォームから受け取った値を処理した後は```redirect()```で```/hello```にGETでアクセスさせます。
@@ -435,9 +437,11 @@ DevToolsを使うと、クッキーの値がそのままでは判別できなく
 Pythonをインストールすると、sqlite3が使えます。ただし CLI はインストールされていません。SQLをREPLで入力しながら確かめるにはCLIを別途インストールする必要があるので注意してください。
 
 > sqlite3 --- SQLite データベースに対する DB-API 2.0 インタフェース
+> 
 > https://docs.python.org/ja/3/library/sqlite3.html
 
 ここまで理解できれば、公式のチュートリアルを試すことができると思います。ぜひ挑戦してみてください。
 
 > Tutorial: Todo-List Application — Bottle 0.13-dev documentation
+> 
 > https://bottlepy.org/docs/dev/tutorial_app.html

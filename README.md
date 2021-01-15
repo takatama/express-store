@@ -4,13 +4,11 @@ PythonのマイクロフレームワークBottleを使ったECサイトのデモ
 
 Windowsを利用する前提で説明します。
 
-## Webセキュリティについての基礎知識
+デモンストレーションを理解するのに必要な基礎知識は次の通りです：
 
-[こちら](/web-security.md)をご覧ください。
-
-## Bottleの使い方
-
-[こちら](/bottle-tutorial.md)をご覧ください。
+- [Webセキュリティについての基礎知識](/web-security.md)
+- [Webアプリケーションフレームワークについての基礎知識](/web-application-framework.md)
+- [Bottleの使い方](/bottle-tutorial.md)
 
 ## デモのはじめかた（Windows）
 
@@ -105,6 +103,7 @@ Internal Server Errorが表示され、攻撃者が入力したSQL文の断片�
 次に攻撃者はデータベースで管理しているテーブルの情報を引き出そうと試みます。SQLiteの場合は特別なテーブル```sqlite_master```から、データベースのメタ情報を引き出すことが可能です。
 
 > The Schema Table
+> 
 > https://sqlite.org/schematab.html
 
 ```
@@ -302,8 +301,9 @@ X-Frame-Optionsヘッダーを正しく設定しましょう！
 
 例えば、無料で使えるWebセキュリティ診断ツールにOWASP ZAPがあります。
 
-> OWASP ZAP
-> https://github.com/zaproxy/zaproxy
+> OWASP Zed Attack Proxy
+> 
+> https://www.zaproxy.org/
 
 ただ、脆弱性とその攻撃に関する知識がなければ、ツールを使いこなすことはできません。ツールがどうやって脆弱性を探しているのかが分からなければ、ツールへの適切な入力ができません。また、ツールから出力された診断結果を読み解いて対処するためには、脆弱性とその攻撃に関する知識が必要です。
 
