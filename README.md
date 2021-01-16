@@ -95,7 +95,7 @@ http://localhost:8080/products
 商品名で検索ができます。次のようなSQL文を使っているのではないか？と攻撃者は推測します。
 
 ```sql
-SELECT * FROM <商品テーブル名> LIKE '%<検索文字列>%';
+SELECT * FROM <商品テーブル名> WHERE <商品名カラム> LIKE '%<検索文字列>%';
 ```
 
 攻撃者は外部から入力される検索文字列の扱いが雑なことを期待して、SQL文の断片```'--```（シングルクォート、ハイフン、ハイフン）で検索してみます。
@@ -107,7 +107,7 @@ http://localhost:8080/products?q='--
 攻撃者は実行されるSQL文が次のようになることを期待しています。LIKEの条件が間違った、おかしなSQL文です。おかしなSQL文が期待通りに実行されれば、エラーが表示されるはずです。
 
 ```sql
-SELECT * FROM <商品テーブル名> LIKE '%'--%';
+SELECT * FROM <商品テーブル名> WHERE <商品名カラム> LIKE '%'--%';
 ```
 
 Internal Server Errorが表示され、攻撃者が入力したSQL文の断片によりSQLインジェクションが成功したことを示唆しています。
@@ -125,7 +125,7 @@ http://localhost:8080/products?q=x%' UNION SELECT 1, tbl_name, sql, 1, 1, 1 FROM
 攻撃者が期待するSQL文は次の通りです。UNIONは2つのSELECTを統合するときに使います。前半のSELECTでは「xで終わる商品」を検索しています。後半のSELECTでは、テーブル名```tbl_name```と、テーブルを作成するsqlを検索します。sqlからカラム名が分かります。
 
 ```sql
-SELECT * FROM <商品テーブル名> LIKE '%x' UNION SELECT 1, tbl_name, sql, 1, 1, 1 FROM sqlite_master--%';
+SELECT * FROM <商品テーブル名> WHERE <商品名カラム> LIKE '%x' UNION SELECT 1, tbl_name, sql, 1, 1, 1 FROM sqlite_master--%';
 ```
 
 検索結果からusersテーブルがあることと、そのカラム名が分かりました。ここからさらに情報を引き出します。
