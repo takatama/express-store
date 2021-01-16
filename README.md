@@ -190,7 +190,7 @@ http://localhost:8081/users
 Webブラウザーが持つセキュリティ機能を、Webアプリ側が強制的に有効にする方法があります。
 
 - X-XSS-Protectionヘッダー
-  - 1にすると、WebブラウザーのXSSフィルターを有効にします。また、mode=blockを指定するとXSSを検出した時にWebページの表示を停止できます。
+  - 1にすると、WebブラウザーのXSSフィルターを有効にします。また、mode=blockを指定するとWebブラウザーがXSSを検出した時にWebページの表示を停止します。
   - ```X-XSS-Protection: 1; mode=block```
 - Content-Security-Policyヘッダー
   - 様々なセキュリティポリシーを設定できます。例えば、全てのリソースを同じドメインからのみ取得させるには次のように指定します。
