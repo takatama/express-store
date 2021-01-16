@@ -22,6 +22,7 @@ def redirect_to_products():
 def show_login():
     return template('''
 <h1>ログイン</h1>
+<!-- XSS対策 -->
 <p style="color:red;"> {{ message }} </p>
 <form action="/login" method="post">
 <p>メールアドレス <input name="email" type="text" placeholder="user1@example.com" value="user1@example.com" /></p>
@@ -51,6 +52,7 @@ def do_login():
     if user_id is None:
         print('Login faild: user_id is ' + user_id)
         return redirect('/login?message=ログインに失敗しました。')
+    # CSRF対策
     response.set_cookie('user_id', user_id, secret=SECRET_KEY, path='/', httponly=True, samesite='lax')
     response.set_cookie('nickname', nickname, secret=SECRET_KEY, path='/', httponly=True, samesite='lax')
     redirect('/products')
@@ -69,6 +71,7 @@ def list_products():
     cur = conn.cursor()
     query = request.query.q
     if query is not None:
+        # SQLインジェクション対策
         results = cur.execute("SELECT * FROM rated_products WHERE name LIKE ?;", ("%" + query + "%",)).fetchall()
     else:
         results = cur.execute('SELECT * FROM rated_products;').fetchall()
@@ -130,7 +133,8 @@ def show_product(product_id):
     <td>
       <ul style="list-style: none; padding-left: 0; margin-bottom: 0;">
       %for comment in comments:
-        <li>{{ !comment }}</li>
+        <!-- XSS対策 -->
+        <li>{{ comment }}</li>
       %end
       </ul>
     </td>
@@ -193,6 +197,7 @@ def add_review():
 
 @hook('after_request')
 def protect():
+    # クリックジャッキング対策
     response.headers['X-Frame-Options'] = 'DENY'
 
 run(host=HOST, port=PORT, reloader=True)

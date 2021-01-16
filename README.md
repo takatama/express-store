@@ -233,6 +233,12 @@ Webブラウザーが持つセキュリティ機能を、Webアプリ側が強�
 > 
 > https://ja.javascript.info/cookie#ref-497
 
+なおInternet Explorerはsamesiteに対応していません。
+
+> SameSite cookies - HTTP | MDN
+> 
+> https://developer.mozilla.org/ja/docs/Web/HTTP/Headers/Set-Cookie/SameSite
+
 攻撃者は攻撃サイトを準備し、甘い言葉で正規の利用者にクリックを促します。
 
 ```
@@ -297,7 +303,9 @@ http://evil.localtest.me:8081/game2
 
 ### CSRFを防ぐには
 
-利用者が投稿する情報にtokenを埋め込み、正規の投稿かどうかを確認しましょう。
+クッキーのsamesite属性を利用しましょう。
+
+なお、Internet Explorerをはじめとする古いWebブラウザーではsamesiteに対応していないため、利用者が情報を投稿するのに使うフォームにトークンを埋め込み、正しいトークンと一緒に投稿されたかどうかを確認する必要があります。
 
 ## クリックジャッキング（Clickjacking）
 
