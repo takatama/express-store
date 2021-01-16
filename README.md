@@ -83,7 +83,7 @@ http://localhost:8080/products/1
 
 ```diff:app.py
 -        results = cur.execute("SELECT * FROM rated_products WHERE name LIKE ?;", ("%" + query + "%",)).fetchall()
-+        results = cur.execute("SELECT * FROM rated_products WHERE name LIKE '%" + query + "%'").fetchall()
++        results = cur.execute("SELECT * FROM rated_products WHERE name LIKE '%" + query + "%';").fetchall()
 ```
 
 Firefoxで商品一覧を表示します。
@@ -92,25 +92,25 @@ Firefoxで商品一覧を表示します。
 http://localhost:8080/products
 ```
 
-商品名で検索ができます。次のようなSQL文を使っているのではないか？と攻撃者は推測します。
+商品名で検索ができます。攻撃者は次のようなSQL文を使っているのではないか？と推測します。
 
 ```sql
 SELECT * FROM <商品テーブル名> WHERE <商品名カラム> LIKE '%<検索文字列>%';
 ```
 
-攻撃者は外部から入力される検索文字列の扱いが雑なことを期待して、SQL文の断片```'--```（シングルクォート、ハイフン、ハイフン）で検索してみます。
+攻撃者は外部から入力される検索文字列の扱いが雑なことを期待して、```'```（シングルクォート）で検索してみます。
 
 ```
-http://localhost:8080/products?q='--
+http://localhost:8080/products?q='
 ```
 
 攻撃者は実行されるSQL文が次のようになることを期待しています。LIKEの条件が間違った、おかしなSQL文です。おかしなSQL文が期待通りに実行されれば、エラーが表示されるはずです。
 
 ```sql
-SELECT * FROM <商品テーブル名> WHERE <商品名カラム> LIKE '%'--%';
+SELECT * FROM <商品テーブル名> WHERE <商品名カラム> LIKE ''%';
 ```
 
-Internal Server Errorが表示され、攻撃者が入力したSQL文の断片によりSQLインジェクションが成功したことを示唆しています。
+Error: 500 Internal Server Errorが表示され、攻撃者が入力したSQL文の断片によりSQLインジェクションが成功したことを示唆しています。
 
 次に攻撃者はデータベースで管理しているテーブルの情報を引き出そうと試みます。SQLiteの場合は特別なテーブル```sqlite_master```から、データベースのメタ情報を引き出すことが可能です。
 
