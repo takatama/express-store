@@ -243,12 +243,6 @@ Webブラウザーが持つセキュリティ機能を、Webアプリ側が強�
 > 
 > https://ja.javascript.info/cookie#ref-497
 
-なおInternet Explorerはsamesiteに対応していません。
-
-> SameSite cookies - HTTP | MDN
-> 
-> https://developer.mozilla.org/ja/docs/Web/HTTP/Headers/Set-Cookie/SameSite
-
 攻撃者は攻撃サイトを準備し、甘い言葉で正規の利用者にクリックを促します。
 
 ```
@@ -313,9 +307,51 @@ http://evil.localtest.me:8081/game2
 
 ### CSRFを防ぐには
 
-クッキーのsamesite属性を利用しましょう。
+クッキーを使って認証している場合には、クッキーのsamesite属性を利用しましょう。ただし、```samesite='lax'```の場合は、GETメソッドであってもクッキーが付与されるので、GETメソッドで情報を更新する機能（例えば「既読にする」のように情報の参照に加えて情報を更新する副作用が発生する機能）を実装してはいけません。
 
-なお、Internet Explorerをはじめとする古いWebブラウザーはsamesiteに対応していないので、samesiteに頼ったCSRF対策では不十分です。古いWebブラウザーを利用させるのであれば、利用者が情報を投稿するのに使うフォームにトークンを埋め込み、正しいトークンと一緒に投稿されたかどうかを確認する必要があります。
+また、Internet Explorerをはじめとする古いWebブラウザーはsamesite属性に対応していません。
+
+> SameSite cookies - HTTP | MDN
+> 
+> https://developer.mozilla.org/ja/docs/Web/HTTP/Headers/Set-Cookie/SameSite
+
+古いWebブラウザーを利用させるのであれば、トークンを利用した対策が必要になります。攻撃者が推測できないランダム文字列のトークンを準備し、利用者が情報を投稿するフォームとクッキーにそれぞれ埋め込んでおきます。
+
+```python
+from secrets import token_urlsafe
+...
+csrf_token = token_urlsafe()
+request.set_cookie('csrf_token', csrf_token, secret=SECRET_KEY, httponly=True, path='/', samesite='lax')
+return template('''
+<form action='/reviews' method="post">
+  ...
+  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+</form>
+''', csrf_token=csrf_token)
+```
+
+そしてPOSTされた情報のトークンを確認します。
+
+```python
+form_token = request.forms.token
+cookie_token = request.get_cookie('csrf_token', secret=SECRET_KEY)
+if form_token != cookie_token:
+    abort(400, '不正なアクセスです。')
+```
+
+せっかくトークンを導入しても、トークンのチェックを忘れると脆弱性になってしまうので注意してください。
+
+また、Single Page Application（SPA）のように、非同期型のWebアプリの場合はCross Origin Resource Sharing（CORS）を導入し、HTTPのOriginヘッダーを検証することで正規の投稿かどうかを判断します。CORSではWebブラウザーからのリクエスト自体はサーバーに届いているため、CSRF攻撃が成功しないよう注意してください。
+
+> オリジン間リソース共有 (CORS) - HTTP | MDN
+> 
+> https://developer.mozilla.org/ja/docs/Web/HTTP/CORS
+
+> CORSの原理を知って正しく使おう 14:55
+> 
+> https://www.youtube.com/watch?v=ryztmcFf01Y
+> 
+> [![](http://img.youtube.com/vi/ryztmcFf01Y/0.jpg)](http://www.youtube.com/watch?v=ryztmcFf01Y "")
 
 ## クリックジャッキング（Clickjacking）
 
