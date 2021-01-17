@@ -77,6 +77,20 @@ http://localhost:8080/products/1
 
 犯罪になるので、外部サービスに対してはここから先に書いてあることを試してはいけません。絶対にやめてください。
 
+## システム構成
+
+ECサイトのドメイン名とポート番号は```localhost:8080```です。攻撃者のサイトは```evil.localtest.me:8081```です。
+
+どちらも開発環境で動作しますが、ドメインを別にしています。```localtest.me```というドメイン名は、DNSによってループバックアドレス```127.0.0.1```として解決されます。なので、Firefoxで```*.localtest.me```へのアクセスするのは、localhostにアクセスするのと同じです。
+
+開発環境でlocalhostとは異なるドメイン名を使う場合、よく使われるのはhostsファイルです。しかし、編集するのに管理者権限が必要で、かつ、編集したことを忘れて使い続けてしまうことが多いのが問題です。hostsファイルを編集せずに使える点で、```localtest.me```は便利です。
+
+> Scott Forsyth's Blog - Introducing Testing Domain - localtest.me
+> 
+> https://weblogs.asp.net/owscott/introducing-testing-domain-localtest-me
+
+他には```lvh.me```というドメイン名が有名です。ただし、これらのドメインはドメインの管理者の気まぐれでいつ使えなくなってもおかしくないので注意してください。
+
 ## SQLインジェクション
 
 ```app.py```を次のように書き換えます。プレースホルダ```?```（はてな）を使わずに、文字列を連結してSQL文を作っています。
@@ -170,14 +184,6 @@ http://localhost:8080/login?message=<script>alert(1)</script>
 ```
 
 ```1```がアラートされ、スクリプトの混入に成功したことが分かります。攻撃者は自分のサイトを立ち上げ、ログイン画面に入力された情報を盗み出そうとします。まず、盗み出した情報を取得するWebアプリを起動します。別のコマンドプロンプトを立ち上げて、```evil.py```を実行してください。攻撃者のWebアプリは、evil.localtest.meというホスト名の8081ポートで起動します。
-
-ここで```localtest.me```というドメイン名は、DNSによってループバックアドレス```127.0.0.1```として解決されます。なので、Firefoxで```*.localtest.me```へのアクセスするのは、localhostにアクセスするのと同じです。
-
-localhostに別名を与えるのによく使うのはhostsファイルですが、管理者権限でhostsファイルを編集する必要がないので便利です。他には```lvh.me```というドメインが有名です。
-
-> Scott Forsyth's Blog - Introducing Testing Domain - localtest.me
-> 
-> https://weblogs.asp.net/owscott/introducing-testing-domain-localtest-me
 
 攻撃者のサイトを起動します。
 
