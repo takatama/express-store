@@ -25,3 +25,7 @@ Webアプリケーションフレームワークの概要について、動画�
 > https://www.youtube.com/watch?v=IKBU84gGwmg
 >
 > [![](http://img.youtube.com/vi/IKBU84gGwmg/0.jpg)](http://www.youtube.com/watch?v=IKBU84gGwmg "")
+
+次は、Bottleの使い方について学びます。
+
+[次へ](/bottle-tutorial.md) | [戻る](/web-security.md)
