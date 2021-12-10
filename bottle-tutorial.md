@@ -17,7 +17,7 @@ Windowsを利用することが前提です。
 Visual Studio Code を使用して Python 初心者向けの開発環境をセットアップする
 https://docs.microsoft.com/ja-jp/learn/modules/python-install-vscode/
 
-2921/01/10時点ではPython 3.9.1が最新でした。
+2021/12/10時点ではPython 3.10.1が最新でした。
 
 Python3のインストールが完了したら、仮想環境を作ります。仮想環境名は```venv```とします。
 
