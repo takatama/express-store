@@ -420,7 +420,18 @@ http://localhost:8080/hello?message=<script>alert(document.cookie)</script>
 ## Step8: 署名付きクッキー（Signed cookie）
 
 クッキーを保存するときに電子署名をつけることで、クッキーの改ざんを防ぐことができます。
-```response.set_cookie('<key名>', '<value値>', secure='<署名の鍵となる文字列>')```で使うことができます。署名の鍵となる文字列は秘密にしておく必要があります。直接ソースコードに書くのではなく、環境変数として設定をしてそれを読み込んで使うようにしてください。
+```response.set_cookie('<key名>', '<value値>', secure='<署名の鍵となる文字列>')```で使うことができます。
+
+Step7のコードを次のように書き換えてみましょう。
+DevToolsを使うと、クッキーの値がそのままでは判別できなくなっていることが分かります。
+
+```diff
+-    response.set_cookie('name', name, httponly=True)
++    # 署名の鍵を直接コーディングするのは危険です
++    response.set_cookie('name', name, httponly=True, secure='himitsu_no_mojiretsu')
+```
+
+署名の鍵となる文字列は秘密にしておく必要があります。直接ソースコードに書くのではなく、環境変数として設定をしてそれを読み込んで使うようにしてください。
 
 Windowsのコマンドプロンプトで環境変数を設定するには、
 
@@ -428,9 +439,42 @@ Windowsのコマンドプロンプトで環境変数を設定するには、
 > set 環境変数名=環境変数の値
 ```
 
-Pythonで環境変数を読み込むには```from os import environ```をして、```environ.get('<環境変数名>')```で参照します。
+Ubuntuの場合は、
 
-DevToolsを使うと、クッキーの値がそのままでは判別できなくなっていることが分かります。
+```console
+$ export 環境変数名=環境変数の値
+```
+
+を使います。
+
+Pythonで環境変数を読み込むには```from os import environ```をして、```environ.get('<環境変数名>')```で参照します。
+環境変数名を```SECURE_KEY```にした時のコードは次の通りです。
+
+```python
+from bottle import route, run, template, request, response, redirect
+from os import environ
+
+@route('/hello', method='get')
+def show_form():
+    name = request.cookies.decode().get('name')
+    message = request.query.message
+    secure_key = environ.get('SECURE_KEY')
+    # これは危険なコードです！
+    return template('''
+        <p>{{ !message }}</p>
+        <form action="/hello" method="post">
+            <p>名前 <input type="text" name="name" value="{{ name }}"/></p>
+            <p><input type="submit" value="保存"/>
+        </form>''', name=name, message=message)
+
+@route('/hello', method='post')
+def hello():
+    name = request.forms.decode().get('name')
+    response.set_cookie('name', name, httponly=True, secure=secure_key)
+    redirect('/hello')
+
+run(host='localhost', port=8080, reloader=True)
+```
 
 ## Step9: データベース
 
