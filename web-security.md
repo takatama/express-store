@@ -88,4 +88,4 @@ Webアプリの代表的な脆弱性10種について、IPAが解説していま
 
 解説は、ローカル環境に起動したサーバーに攻撃をすることで確認します。なお、他人のシステムに攻撃をすることは犯罪です。絶対にしないでください。
 
-[次へ](/web-application-framework.md) | [戻る](/README.md)
+[戻る](/README.md) | [次へ](/web-application-framework.md)

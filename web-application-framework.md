@@ -32,4 +32,4 @@ Webアプリケーションフレームワークの概要について、動画�
 
 次は、Bottleの使い方について学びます。
 
-[次へ](/bottle-tutorial.md) | [戻る](/web-security.md)
+[戻る](/web-security.md) | [次へ](/bottle-tutorial.md)

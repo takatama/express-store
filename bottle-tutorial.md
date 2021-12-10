@@ -446,4 +446,4 @@ Pythonをインストールすると、sqlite3が使えます。ただし CLI �
 > 
 > https://bottlepy.org/docs/dev/tutorial_app.html
 
-[次へ](/README.md) | [戻る](web-application-framework.md)
+[戻る](web-application-framework.md) | [次へ](/README.md)
