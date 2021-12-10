@@ -165,7 +165,7 @@ http://localhost:8080/hello/<img src="1" onerror="alert(1);">
 from bottle import route, run, template
 
 @route('/hello/<name>')
-def (name):
+def hello(name):
     return template('Hello {{ name }}', name=name)
 
 run(host='localhost', port=8080, reloader=True)
