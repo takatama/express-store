@@ -28,8 +28,8 @@ Python3のインストールが完了したら、仮想環境を作ります。�
 ソースコードを clone します。
 
 ```console
-> (venv)> git pull https://github.com/takatama/bottle-store.git
-> (venv)> cd bottle-store
+(venv)> git pull https://github.com/takatama/bottle-store.git
+(venv)> cd bottle-store
 ```
 
 必要なモジュールをインストールします。
@@ -44,7 +44,7 @@ Python3のインストールが完了したら、仮想環境を作ります。�
 (venv)> py setup.py
 ```
 
-署名付きcookieのための鍵を環境変数```STORE_SECRET_KEY```に設定します。
+署名付きcookieのための鍵を環境変数```STORE_SECRET_KEY```に設定します。適当な文字列で構いません。
 
 ```console
 (venv)> set STORE_SECRET_KEY=<署名付きcookieのための鍵（文字列）>
