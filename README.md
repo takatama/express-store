@@ -105,7 +105,7 @@ localhostに別名を割り当てるのによく使うのはhostsファイルで
 
 ```app.py```を次のように書き換えます。プレースホルダ```?```（はてな）を使わずに、文字列を連結してSQL文を作ってしまっています。
 
-```diff:app.py
+```diff
 -        results = cur.execute("SELECT * FROM rated_products WHERE name LIKE ?;", ("%" + query + "%",)).fetchall()
 +        results = cur.execute("SELECT * FROM rated_products WHERE name LIKE '%" + query + "%';").fetchall()
 ```
@@ -187,7 +187,7 @@ usersテーブルのid、email、hashed_password、nicknameが漏洩してしま
 ```app.py```を次のように書き換えます。画面に表示する変数```message```のエスケープ漏れです。bottleのテンプレートで!（エクスクラメーションマーク）は、変数をエスケープせず生のまま表示することを意味します。
 
 
-```diff:app.py
+```diff
 -<p style="color:red;"> {{ message }} </p>
 +<p style="color:red;"> {{ !message }} </p>
 ```
@@ -279,7 +279,7 @@ Webブラウザーが持つセキュリティ機能を、Webアプリ側が強�
 
 ```app.py```を次のよう書き換えます。
 
-```diff:app.py
+```diff
 -    response.set_cookie('user_id', user_id, secret=SECRET_KEY, path='/', httponly=True, samesite='lax')
 -    response.set_cookie('nickname', nickname, secret=SECRET_KEY, path='/', httponly=True, samesite='lax')
 +    response.set_cookie('user_id', user_id, secret=SECRET_KEY, path='/', httponly=True, samesite='none')
@@ -329,7 +329,7 @@ http://localhost:8080/products/1
 
 さらに```app.py```を書き換え、```comment```のエスケープを外します。これで、商品の詳細ページにXSSが可能になってしまいます。
 
-```diff:app.py
+```diff
 -        <li>{{ comment }}</li>
 +        <li>{{ !comment }}</li>
 ```
@@ -413,7 +413,7 @@ if form_token != cookie_token:
 
 HTMLの```\<iframe\>```タグを使うことで、別のサイトのWebページを自サイト上に掲載することができます。X-Frame-Optionsヘッダーは、別のサイトがiframe内にそのページを表示してよいかどうかを設定します。ヘッダー名を間違えてしまったので有効にならず、誰でもそのページをiframe内に表示することができるようになってしまいました。
 
-```diff:app.py
+```diff
 -    response.headers['X-Frame-Options'] = 'DENY'
 +   response.headers['X-Frame-Option'] = 'DENY'
 ```
