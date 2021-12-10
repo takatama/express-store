@@ -269,11 +269,12 @@ Webブラウザーが持つセキュリティ機能を、Webアプリ側が強�
 ```diff:app.py
 -    response.set_cookie('user_id', user_id, secret=SECRET_KEY, path='/', httponly=True, samesite='lax')
 -    response.set_cookie('nickname', nickname, secret=SECRET_KEY, path='/', httponly=True, samesite='lax')
-+    response.set_cookie('user_id', user_id, secret=SECRET_KEY, path='/', httponly=True)
-+    response.set_cookie('nickname', nickname, secret=SECRET_KEY, path='/', httponly=True)
++    response.set_cookie('user_id', user_id, secret=SECRET_KEY, path='/', httponly=True, samesite='none')
++    response.set_cookie('nickname', nickname, secret=SECRET_KEY, path='/', httponly=True, samesite='none')
 ```
 
-うっかりクッキーのsamesite属性を指定し忘れてしまいました。このことで、外部サイトに設置されたフォームからPOSTメソッドで正規のサイトにリクエストを出した時に、正規サイトのクッキーをそのリクエストに付与してしまいます。
+クッキーのsamesite属性について良く知らないまま、laxを指定すべきところを、noneを指定してしまいました。
+このことで、外部サイトに設置されたフォームからPOSTメソッドで正規のサイトにリクエストを出した時に、正規サイトのクッキーをそのリクエストに付与してしまいます。
 
 > samesite | Cookies(クッキー), document.cookie
 > 
@@ -311,7 +312,7 @@ http://evil.localtest.me:8081/game1
 http://localhost:8080/products/1
 ```
 
-なお、Chromeの場合はこの攻撃が成立せず、ログインが求められることになります。なぜならChromeはクッキーのsamesite属性が指定されていないリクエストは、```samesite='lax'```が指定されたものとして扱うためです。
+なお、samesite属性のデフォルト値はlaxなので、samesite属性そのものを削除しているのであればこの攻撃が成立せず、ログインが求められることになります。
 
 さらに```app.py```を書き換え、```comment```のエスケープを外します。これで、商品の詳細ページにXSSが可能になってしまいます。
 
