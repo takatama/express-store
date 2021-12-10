@@ -17,6 +17,7 @@ def index():
         <h1>攻撃者が準備したサイト</h1>
         <ul>
             <li><a href="/users">盗んだユーザー情報</a></li>
+            <li><a href="/game0">XSS</a></li>
             <li><a href="/game1">CSRF</a></li>
             <li><a href="/game2">CSRF + Persistent XSS</a></li>
             <li><a href="/game3">Clickjacking</a></li>
