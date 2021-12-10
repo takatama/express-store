@@ -25,6 +25,12 @@ Python3のインストールが完了したら、仮想環境を作ります。�
 > py -m venv venv
 (venv)>
 ```
+ソースコードを clone します。
+
+```console
+> (venv)> git pull https://github.com/takatama/bottle-store.git
+> (venv)> cd bottle-store
+```
 
 必要なモジュールをインストールします。
 
