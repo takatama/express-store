@@ -28,7 +28,7 @@ Python3のインストールが完了したら、仮想環境を作ります。�
 ソースコードを clone します。
 
 ```console
-(venv)> git pull https://github.com/takatama/bottle-store.git
+(venv)> git clone https://github.com/takatama/bottle-store.git
 (venv)> cd bottle-store
 ```
 
