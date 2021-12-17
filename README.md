@@ -214,6 +214,7 @@ http://localhost:8080/login?message=<script>alert(1)</script>
 
 ```console
 > .\venv\Scripts\activate
+(venv)> cd bottle-store
 (venv)> py evil.py
 ```
 
