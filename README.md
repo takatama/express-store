@@ -1,6 +1,6 @@
-# bottle-store
+# express-store
 
-PythonのマイクロフレームワークBottleを使ったECサイトのデモンストレーションです。ソースコードを編集して脆弱性をわざと仕込むことで、どんな攻撃が可能になるかを示していきます。
+JavaScriptのWebアプリフレームワークExpressを使ったECサイトのデモンストレーションです。ソースコードを編集して脆弱性をわざと仕込むことで、どんな攻撃が可能になるかを示していきます。
 
 OSはWindows、WebブラウザーはFirefoxを利用します。
 
@@ -8,52 +8,44 @@ OSはWindows、WebブラウザーはFirefoxを利用します。
 
 - [Webセキュリティについての基礎知識](/web-security.md)
 - [Webアプリケーションフレームワークについての基礎知識](/web-application-framework.md)
-- [Bottleの使い方](/bottle-tutorial.md)
+- [Expressの使い方](/express-tutorial.md)
 
 ## デモのはじめかた（Windows）
 
-まずPython3をインストールします。
+まずWSL2にnvm、node.js、npmをインストールし、Visual Studio Codeの拡張機能を設定します。
 
-Visual Studio Code を使用して Python 初心者向けの開発環境をセットアップする
-https://docs.microsoft.com/ja-jp/learn/modules/python-install-vscode/
+WSL 2 上で Node.js を設定する | Microsoft Learn
+https://learn.microsoft.com/ja-jp/windows/dev-environment/javascript/nodejs-on-wsl
 
-2021/12/10時点ではPython 3.10.1が最新でした。
-
-Python3のインストールが完了したら、仮想環境を作ります。仮想環境名は```venv```とします。
-
-```console
-> py -m venv venv
-(venv)>
-```
 ソースコードを clone します。
 
 ```console
-(venv)> git clone https://github.com/takatama/bottle-store.git
-(venv)> cd bottle-store
+$ git clone https://github.com/takatama/express-store.git
+$ cd express-store
 ```
 
 必要なモジュールをインストールします。
 
 ```console
-(venv)> pip install -r requirements.txt
+$ npm install
 ```
 
 データベースを初期化します。データベースのファイル```app.db```と```evil.db```が作成されます。
 
 ```console
-(venv)> py setup.py
+$ node setup.js
 ```
 
-署名付きcookieのための鍵を環境変数```STORE_SECRET_KEY```に設定します。適当な文字列で構いません。
+署名付きcookieのための鍵を環境変数```SECRET_KEY```に設定します。適当な文字列で構いません。
 
 ```console
-(venv)> set STORE_SECRET_KEY=<署名付きcookieのための鍵（文字列）>
+$ export SECRET_KEY=<署名付きcookieのための鍵（文字列）>
 ```
 
-ECサイトを起動します。localhost:8080で立ち上がります。環境変数を設定し忘れていると、RuntimeErrorが発生して起動できないのでご注意ください。
+ECサイトを起動します。localhost:8080で立ち上がります。環境変数を設定し忘れていると、例外が発生して起動できないのでご注意ください。
 
 ```console
-(venv)> py app.py
+$ node app.js
 ```
 
 Firefoxで http://localhost:8080/ にアクセスすると使えます。
@@ -103,11 +95,12 @@ localhostに別名を割り当てるのによく使うのはhostsファイルで
 
 ここからは、未熟な開発者がバグを埋め込んでしまった、と仮定して、バグありのコードに書き換えていきます。
 
-```app.py```を次のように書き換えます。プレースホルダ```?```（はてな）を使わずに、文字列を連結してSQL文を作ってしまっています。
+```app.js```を次のように書き換えます。プレースホルダ```?```（はてな）を使わずに、文字列を連結してSQL文を作ってしまっています。
 
 ```diff
--        results = cur.execute("SELECT * FROM rated_products WHERE name LIKE ?;", ("%" + query + "%",)).fetchall()
-+        results = cur.execute("SELECT * FROM rated_products WHERE name LIKE '%" + query + "%';").fetchall()
+        // SQLインジェクション対策
+-        db.all("SELECT * FROM rated_products WHERE name LIKE ?;", "%" + query + "%", (err, rows) => {
++        db.all("SELECT * FROM rated_products WHERE name LIKE '%" + query + "%'", (err, rows) => {
 ```
 
 Firefoxで商品一覧を表示します。
@@ -124,7 +117,7 @@ SELECT * FROM <商品テーブル名> WHERE <商品名カラム> LIKE '%<検索�
 ```
 
 攻撃者は外部から入力される検索文字列の扱いが雑なことを期待して、```'```（シングルクォート）で検索してみます。
-```app.py```を変更する前のプレースホルダを使った場合では問題ないのですが、検索文字列をエスケープせずにそのまま使った場合のSQL文は次のようになります。
+```app.js```を変更する前のプレースホルダを使った場合では問題ないのですが、検索文字列をエスケープせずにそのまま使った場合のSQL文は次のようになります。
 
 ```sql
 SELECT * FROM <商品テーブル名> WHERE <商品名カラム> LIKE ''%';
@@ -160,11 +153,17 @@ UNIONは2つのSELECTを統合するときに使います。前半のSELECTで�
 ```
 http://localhost:8080/products?q=x%' UNION SELECT 1, tbl_name, sql, 1, 1, 1 FROM sqlite_master--
 ```
+```
+http://localhost:8080/products?q=x%25%27+UNION+SELECT+1%2C+tbl_name%2C+sql%2C+1%2C+1%2C+1+FROM+sqlite_master--
+```
 
-画面に表示される検索結果から、usersテーブルがあることと、そのカラム名が分かりました。ここからさらに情報を引き出します。
+画面に表示される検索結果から、usersテーブルがあることと、そのカラム名が分かりました。ここからさらに情報を引き出します。検索する文字列は`x%' UNION SELECT 1, id, email, 1, hashed_password, nickname FROM users--`です。
 
 ```
 http://localhost:8080/products?q=x%' UNION SELECT 1, id, email, 1, hashed_password, nickname FROM users--
+```
+```
+http://localhost:8080/products?q=x%25%27+UNION+SELECT+1%2C+id%2C+email%2C+1%2C+hashed_password%2C+nickname+FROM+users--
 ```
 
 usersテーブルのid、email、hashed_password、nicknameが漏洩してしまいました。かろうじてパスワードをハッシュ化していましたが、平文で保存していたら目も当てられません。
@@ -184,12 +183,13 @@ usersテーブルのid、email、hashed_password、nicknameが漏洩してしま
 ## 反射型クロスサイトスクリプティング（Reflected XSS）
 
 それでは、次のバグを埋め込んでみます。たった1文字が紛れ込むことで、攻撃が可能になってしまう例です。
-```app.py```を次のように書き換えます。画面に表示する変数```message```のエスケープ漏れです。bottleのテンプレートで!（エクスクラメーションマーク）は、変数をエスケープせず生のまま表示することを意味します。
+```app.js```を次のように書き換えます。画面に表示する変数```message```のエスケープ漏れです。EJSのテンプレートで`<%- %>`は、変数をエスケープせず生のまま表示することを意味します。
 
 
 ```diff
--<p style="color:red;"> {{ message }} </p>
-+<p style="color:red;"> {{ !message }} </p>
+<!-- XSS対策 -->
+-<p style="color:red;"> <%= message %> </p>
++<p style="color:red;"> <%- message %> </p>
 ```
 
 攻撃者は、ログイン画面でURLのquery parameterとして渡した文字列が画面に表示されていることに着目し、query parameterの扱いが雑になっていることを期待して、次のようなURLでアクセスしてきます。HTMLで```\<s\>```タグは取り消し線を意味します。
@@ -210,12 +210,10 @@ http://localhost:8080/login?message=<script>alert(1)</script>
 
 攻撃者は自分の持つ攻撃用サイトを立ち上げ、正規の利用者が正規のログイン画面に入力した情報を盗み出すことを思いつきます。
 
-攻撃用サイトを起動するには、別のコマンドプロンプトを立ち上げて、```evil.py```を実行します。成功すればevil.localtest.meというホスト名の8081ポートで起動します。起動に失敗したり、起動できてもFirefoxからアクセスできない場合には、すでに8081番ポートが使われている可能性があります。例えば、8082など、別のポート番号にコードを書き換えて起動しなおしてください。```evil.py```の```PORT```の値を変更します。
+攻撃用サイトを起動するには、別のコマンドプロンプトを立ち上げて、```evil.js```を実行します。成功すればevil.localtest.meというホスト名の8081ポートで起動します。起動に失敗したり、起動できてもFirefoxからアクセスできない場合には、すでに8081番ポートが使われている可能性があります。例えば、8082など、別のポート番号にコードを書き換えて起動しなおしてください。```evil.js```の```PORT```の値を変更します。
 
 ```console
-> .\venv\Scripts\activate
-(venv)> cd bottle-store
-(venv)> py evil.py
+$ node evil.js
 ```
 
 XSSが成功すると、攻撃者がログイン画面にスクリプトを混入できるので、同じログイン画面にもかかわらずフォームの登録先サーバーを変更できてしまいます。正規の利用者が次のURLをクリックすると、画面上は何も変わりがありませんが、実は向き先の変わっているログイン画面が表示されます。
@@ -278,13 +276,16 @@ Webブラウザーが持つセキュリティ機能を、Webアプリ側が強�
 
 ## クロスサイト・リクエストフォージェリ（CSRF）と蓄積型クロスサイトスクリプティング（Persistent XSS）の合わせ技
 
-```app.py```を次のよう書き換えます。
+このセクションはWebブラウザーにFirefoxを使います。
+
+```app.js```を次のよう書き換えます。
 
 ```diff
--    response.set_cookie('user_id', user_id, secret=SECRET_KEY, path='/', httponly=True, samesite='lax')
--    response.set_cookie('nickname', nickname, secret=SECRET_KEY, path='/', httponly=True, samesite='lax')
-+    response.set_cookie('user_id', user_id, secret=SECRET_KEY, path='/', httponly=True, samesite='none')
-+    response.set_cookie('nickname', nickname, secret=SECRET_KEY, path='/', httponly=True, samesite='none')
+            // CSRF対策
+-            res.cookie('userId', row.id, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
+-            res.cookie('nickname', row.nickname, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
++            res.cookie('userId', row.id, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
++            res.cookie('nickname', row.nickname, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
 ```
 
 クッキーのsamesite属性について良く知らないまま、laxを指定すべきところを、noneを指定してしまいました。
@@ -328,11 +329,12 @@ http://localhost:8080/products/1
 
 なお、samesite属性のデフォルト値はlaxなので、samesite属性そのものを削除しているのであればこの攻撃が成立せず、ログインが求められることになります。
 
-さらに```app.py```を書き換え、```comment```のエスケープを外します。これで、商品の詳細ページにXSSが可能になってしまいます。
+さらに```app.js```を書き換え、```comment```のエスケープを外します。これで、商品の詳細ページにXSSが可能になってしまいます。
 
 ```diff
--        <li>{{ comment }}</li>
-+        <li>{{ !comment }}</li>
+    <!-- XSS対策 -->
+-    <li><%= comment %></li>
++    <li><%- comment %></li>
 ```
 
 攻撃者は攻撃用サイトを準備し、甘い言葉で正規の利用者にクリックを促します。
@@ -380,7 +382,7 @@ request.set_cookie('csrf_token', csrf_token, secret=SECRET_KEY, httponly=True, p
 return template('''
 <form action='/reviews' method="post">
   ...
-  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+  <input type="hidden" name="csrf_token" value="<%= csrf_token %>" />
 </form>
 ''', csrf_token=csrf_token)
 ```
@@ -410,13 +412,14 @@ if form_token != cookie_token:
 
 ## クリックジャッキング（Clickjacking）
 
-```app.py```を次のよう書き換えます。X-Frame-Optionsヘッダーのヘッダー名を間違え、sを抜かしたX-Frame-Optionにしてしまいました。
+```app.js```を次のよう書き換えます。X-Frame-Optionsヘッダーのヘッダー名を間違え、sを抜かしたX-Frame-Optionにしてしまいました。
 
 HTMLの```\<iframe\>```タグを使うことで、別のサイトのWebページを自サイト上に掲載することができます。X-Frame-Optionsヘッダーは、別のサイトがiframe内にそのページを表示してよいかどうかを設定します。ヘッダー名を間違えてしまったので有効にならず、誰でもそのページをiframe内に表示することができるようになってしまいました。
 
 ```diff
--    response.headers['X-Frame-Options'] = 'DENY'
-+   response.headers['X-Frame-Option'] = 'DENY'
+    // クリックジャッキング対策
+-    res.header('X-Frame-Options', 'DENY')
++    res.header('X-Frame-Option', 'DENY')
 ```
 
 攻撃者は攻撃用サイトを準備し、甘い言葉で正規の利用者にクリックを促します。
