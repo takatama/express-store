@@ -75,7 +75,9 @@ app.listen(port, host, () => {
 })
 ```
 
-もう一度、Webブラウザーで次のURLにアクセスしてみましょう。`Cannot GET /`と表示されます。
+一度、サーバーをCtrl+Cで停止して、再び`$ node hello.js`で起動します。
+
+そしてWebブラウザーで次のURLに再度アクセスしてみましょう。先ほどとは違って`Cannot GET /`と表示されます。
 
 ```
 http://localhost:8080/
@@ -106,11 +108,18 @@ app.listen(port, host, () => {
 })
 ```
 
-どちらのURLにアクセスしても同じくHello Worldと表示されるようになります。
+サーバーを再起動した後は、どちらのURLにアクセスしても同じくHello Worldと表示されるようになります。
 
 ```
 http://localhost:8080
 http://localhost:8080/hello
+```
+
+さて、サーバーの再起動をするのが面倒になってきました。そこで、新しく`nodemon`モジュールをインストールして、`hello.js`を書き換えると自動的にサーバーを再起動させてみます。
+
+```console
+$ node i nodemon
+$ npx nodemon hello.js
 ```
 
 ## Step2: ダイナミックルーティング
