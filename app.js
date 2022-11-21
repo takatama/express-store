@@ -16,8 +16,8 @@ const app = express()
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser(SECRET_KEY))
 app.use((req, res, next) => {
-    // クリックジャッキング対策
-    res.header('X-Frame-Options', 'DENY')
+    // Clickjacking対策
+    res.header('X-Frame-Option', 'DENY')
     next()
 })
 
@@ -91,7 +91,7 @@ app.get('/products', (req, res) => {
     if (query) {
         // SQLインジェクション対策
         db.all("SELECT * FROM rated_products WHERE name LIKE ?;", "%" + query + "%", (err, rows) => {
-            return res.send(productsHtml(nickname, rows, query))
+                return res.send(productsHtml(nickname, rows, query))
         })
     } else {
         db.all('SELECT * FROM rated_products;', (err, rows) => {
