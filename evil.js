@@ -89,7 +89,7 @@ app.get('/game3', (req, res) => {
 <p>下の方に面白いゲームが遊べるボタンがあるよ！ちゃんと押せるかな？？</p>
 <p><input type="checkbox" onchange="invisible(this.checked)">消す</p>
 <iframe src="<%= url %>/products" width="800" height="1200"></iframe>
-<button style="position:absolute; top:370; left:395; z-index:-1;">あそんでみる</button>
+<button style="position:absolute; top:370; left:455; z-index:-1;">あそんでみる</button>
 <script>function invisible(checked) {
     const iframe = document.querySelector('iframe');
     if (checked) {
