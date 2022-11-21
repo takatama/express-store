@@ -42,10 +42,10 @@ $ node setup.js
 $ export SECRET_KEY=<署名付きcookieのための鍵（文字列）>
 ```
 
-ECサイトを起動します。localhost:8080で立ち上がります。環境変数を設定し忘れていると、例外が発生して起動できないのでご注意ください。
+ECサイトを起動します。localhost:8080で立ち上がります。環境変数を設定し忘れていると、例外が発生して起動できないのでご注意ください。nodemonを使い、ソースコードを修正すると自動で再起動させています。
 
 ```console
-$ node app.js
+$ npx nodemon app.js
 ```
 
 Firefoxで http://localhost:8080/ にアクセスすると使えます。
@@ -146,22 +146,16 @@ SELECT * FROM <商品テーブル名> WHERE <商品名カラム> LIKE '%x' UNION
 
 UNIONは2つのSELECTを統合するときに使います。前半のSELECTでは「xで終わる商品」を検索しています。後半のSELECTでは、テーブル名```tbl_name```と、そのテーブルを作成する時に使ったsqlを検索しています。
 
-なお後半のSQLは結果が6列になるよう、4つの```1```を使って調整しています。画面から分かるカラム数は5列ですが、それに加えてIDのための列を1つ追加し、6列にしています。
+なお後半のSQLは結果が6列になるよう、4つの```1```を使って調整しています。画面から分かるカラム数は5列ですが、それに加えてIDのための列を1つ追加し、6列にしています。また、最後にある```--```はそれ以降のSQL文をコメントとして扱います。それ以降のSQL分を無効にする効果があります。
 
-また、最後にある```--```はそれ以降のSQL文をコメントとして扱います。よって、検索する文字列は```x%' UNION SELECT 1, tbl_name, sql, 1, 1, 1 FROM sqlite_master--```とし、アクセスするURLは次のようになります。
+よって、検索する文字列は```x%' UNION SELECT 1, tbl_name, sql, 1, 1, 1 FROM sqlite_master--```となります。これを検索窓に入力するか、パーセントエンコードした以下のURLにアクセスします。
 
-```
-http://localhost:8080/products?q=x%' UNION SELECT 1, tbl_name, sql, 1, 1, 1 FROM sqlite_master--
-```
 ```
 http://localhost:8080/products?q=x%25%27+UNION+SELECT+1%2C+tbl_name%2C+sql%2C+1%2C+1%2C+1+FROM+sqlite_master--
 ```
 
 画面に表示される検索結果から、usersテーブルがあることと、そのカラム名が分かりました。ここからさらに情報を引き出します。検索する文字列は`x%' UNION SELECT 1, id, email, 1, hashed_password, nickname FROM users--`です。
 
-```
-http://localhost:8080/products?q=x%' UNION SELECT 1, id, email, 1, hashed_password, nickname FROM users--
-```
 ```
 http://localhost:8080/products?q=x%25%27+UNION+SELECT+1%2C+id%2C+email%2C+1%2C+hashed_password%2C+nickname+FROM+users--
 ```
@@ -412,12 +406,14 @@ if form_token != cookie_token:
 
 ## クリックジャッキング（Clickjacking）
 
-```app.js```を次のよう書き換えます。X-Frame-Optionsヘッダーのヘッダー名を間違え、sを抜かしたX-Frame-Optionにしてしまいました。
+このセクションはWebブラウザーにFirefoxを使います。
+
+前のセクションでクッキーのsamesite属性をnoneにした後に、```app.js```を次のよう書き換えます。X-Frame-Optionsヘッダーのヘッダー名を間違え、sを抜かしたX-Frame-Optionにしてしまいました。
 
 HTMLの```\<iframe\>```タグを使うことで、別のサイトのWebページを自サイト上に掲載することができます。X-Frame-Optionsヘッダーは、別のサイトがiframe内にそのページを表示してよいかどうかを設定します。ヘッダー名を間違えてしまったので有効にならず、誰でもそのページをiframe内に表示することができるようになってしまいました。
 
 ```diff
-    // クリックジャッキング対策
+    // Clickjacking対策
 -    res.header('X-Frame-Options', 'DENY')
 +    res.header('X-Frame-Option', 'DENY')
 ```
