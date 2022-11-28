@@ -75,6 +75,8 @@ http://localhost:8080/products/1
 
 不正アクセス禁止法に抵触するため、外部サービスに対してはここから先に書いてあることを試してはいけません。絶対にやめてください。
 
+また、脆弱性を仕込む前のコードも安全とは言えません。例えば、ローカル環境で動作させることを優先するため、クッキーのsecure属性をtrueにしていません。暗号化されていないHTTP通信でもクッキーがやり取りされるため、中間者攻撃によってなりすましができてしまいます。このコードを流用された場合に発生するいかなる被害に対しても、責任も負うことができません。ご承知おきください。
+
 ## システム構成
 
 ここでは攻撃者はまだ不正アクセスに失敗して、ECサイトを自由に改ざんすることはできない、という前提です。攻撃者はECサイトとは別の攻撃用サイトを準備していると仮定します。
@@ -278,8 +280,8 @@ Webブラウザーが持つセキュリティ機能を、Webアプリ側が強�
             // CSRF対策
 -            res.cookie('userId', row.id, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
 -            res.cookie('nickname', row.nickname, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
-+            res.cookie('userId', row.id, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
-+            res.cookie('nickname', row.nickname, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
++            res.cookie('userId', row.id, { signed: true, path: '/', httpOnly: true, sameSite: 'none' })
++            res.cookie('nickname', row.nickname, { signed: true, path: '/', httpOnly: true, sameSite: 'none' })
 ```
 
 クッキーのsamesite属性について良く知らないまま、laxを指定すべきところを、noneを指定してしまいました。
