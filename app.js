@@ -17,7 +17,7 @@ app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser(SECRET_KEY))
 app.use((req, res, next) => {
     // Clickjacking対策
-    res.header('X-Frame-Option', 'DENY')
+    res.header('X-Frame-Options', 'DENY')
     next()
 })
 
