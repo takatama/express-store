@@ -364,14 +364,6 @@ app.use(cookieParser())
 Webアプリでクッキーの値を参照するには、```req.cookies.<key名>```を使います。
 一方、クッキーに値を保存するには、```res.cookie('<key名>', '<value値>')```を使います。参照には```req```で複数形の```cookies```を、保存には```res```で単数形の```cookie```を使っていることに注意してください。
 
-...とここまで書いて、日本語をクッキーに保存する場合は注意が必要のようです。
-
-参照には```request.cookies.decode().get('<key名>')```を使う必要があります。
-
-> Python + Bottleで、フォームやCookieに日本語を設定したら文字化けした
-> 
-> https://thinkami.hatenablog.com/entry/2017/04/09/180835
-
 POSTでフォームから受け取った値を処理した後は```res.redirect('/hello')```でURL```/hello```にリダイレクトさせます（GETメソッドでアクセスさせます）。
 
 ```javascript
