@@ -91,7 +91,7 @@ app.get('/products', (req, res) => {
     if (query) {
         // SQLインジェクション対策
         db.all("SELECT * FROM rated_products WHERE name LIKE ?;", "%" + query + "%", (err, rows) => {
-                return res.send(productsHtml(nickname, rows, query))
+            return res.send(productsHtml(nickname, rows, query))
         })
     } else {
         db.all('SELECT * FROM rated_products;', (err, rows) => {
