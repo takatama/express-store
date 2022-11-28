@@ -34,7 +34,7 @@ $ npm install express
 const express = require('express')
 const app = express()
 const host = 'localhost'
-const port = 8080
+const port = 8082
 
 app.get('/', (req, res) => {
   res.send('Hello World')
@@ -49,13 +49,13 @@ app.listen(port, host, () => {
 
 ```console
 $ node hello.js
-Server ready at http://localhost:8080
+Server ready at http://localhost:8082
 ```
 
 Webブラウザーで次のURLにアクセスしてみましょう。Hello Worldと表示されます。
 
 ```
-http://localhost:8080/
+http://localhost:8082/
 ```
 
 ここで、```app.get()```の最初のパラメーターを```'/'```から```'/hello'```に変更して、保存します。
@@ -64,7 +64,7 @@ http://localhost:8080/
 const express = require('express')
 const app = express()
 const host = 'localhost'
-const port = 8080
+const port = 8082
 
 app.get('/hello', (req, res) => {
   res.send('Hello World')
@@ -80,13 +80,13 @@ app.listen(port, host, () => {
 そしてWebブラウザーで次のURLに再度アクセスしてみましょう。先ほどとは違って`Cannot GET /`と表示されます。
 
 ```
-http://localhost:8080/
+http://localhost:8082/
 ```
 
 次に、Webブラウザーで次のURLにアクセスしてみましょう。Hello Worldと表示されます。
 
 ```
-http://localhost:8080/hello
+http://localhost:8082/hello
 ```
 
 この動作から分かる通り、```/hello```にアクセスがあると、```app.get()```の2つ目の引数で設定された関数が実行されています。```app.get()```は、どのURLにHTTP GETでアクセスされると、どの関数を実行するのかを示しています。この機能をリクエストのルーティング（Routing）と呼びます。
@@ -97,7 +97,7 @@ http://localhost:8080/hello
 const express = require('express')
 const app = express()
 const host = 'localhost'
-const port = 8080
+const port = 8082
 
 app.get(['/', '/hello'], (req, res) => {
   res.send('Hello World')
@@ -111,8 +111,8 @@ app.listen(port, host, () => {
 サーバーを再起動した後は、どちらのURLにアクセスしても同じくHello Worldと表示されるようになります。
 
 ```
-http://localhost:8080
-http://localhost:8080/hello
+http://localhost:8082
+http://localhost:8082/hello
 ```
 
 さて、サーバーの再起動をするのが面倒になってきました。そこで、新しく`nodemon`モジュールをインストールして、`hello.js`を書き換えると自動的にサーバーを再起動させてみます。
@@ -130,7 +130,7 @@ $ npx nodemon hello.js
 const express = require('express')
 const app = express()
 const host = 'localhost'
-const port = 8080
+const port = 8082
 
 app.get('/hello/:name', (req, res) => {
   // これは危険なコードです！ 
@@ -145,7 +145,7 @@ app.listen(port, host, () => {
 例えば、
 
 ```
-http://localhost:8080/hello/世界
+http://localhost:8082/hello/世界
 ```
 
 にアクセスすると、```Hello 世界```と表示されます。
@@ -153,7 +153,7 @@ http://localhost:8080/hello/世界
 なお、URLの末尾にスラッシュを一つ追加した
 
 ```
-http://localhost:8080/hello/世界/
+http://localhost:8082/hello/世界/
 ```
 
 にアクセスしても、同じ結果になります。
@@ -163,7 +163,7 @@ http://localhost:8080/hello/世界/
 具体的には、次のURLにアクセスすると、アラートで```1```と表示されます。
 
 ```
-http://localhost:8080/hello/<img src="1" onerror="alert(1);">
+http://localhost:8082/hello/<img src="1" onerror="alert(1);">
 ```
 
 ```\<img\>```タグがsrc属性に指定さ入れたURLから画像を取得しようとして失敗し、onerror属性のスクリプトを実行した結果です。```name```変数に入った情報をそのままページに表示するとHTMLタグとして認識されてしまいます。ここは、HTMLタグではなく単なる文字列として認識させるよう変換処理（エスケープ）が必要です。```\<```と```\>```を、それぞれ```&lt;```と```&gt;```に変換すれば大丈夫です。
@@ -184,7 +184,7 @@ $ npm i ejs
 const express = require('express')
 const app = express()
 const host = 'localhost'
-const port = 8080
+const port = 8082
 const ejs = require('ejs')
 
 app.get('/hello/:name', (req, res) => {
@@ -199,7 +199,7 @@ app.listen(port, host, () => {
 このように修正すれば、先ほどのスクリプト込みのURLにアクセスしてもJavaScriptは実行されず（アラートは表示されず）、画面にスクリプトが表示されるだけになります。
 
 ```
-http://localhost:8080/hello/<img src="1" onerror="alert(1);">
+http://localhost:8082/hello/<img src="1" onerror="alert(1);">
 ```
 
 XSSは非常に危険な脆弱性なので、テンプレートを使ったエスケープを忘れないようにしてください。
@@ -210,7 +210,7 @@ XSSは非常に危険な脆弱性なので、テンプレートを使ったエ�
 const express = require('express')
 const app = express()
 const host = 'localhost'
-const port = 8080
+const port = 8082
 const ejs = require('ejs')
 
 app.get('/hello/:name', (req, res) => {
@@ -249,7 +249,7 @@ for(let i = 0; i < count; i++) {
 const express = require('express')
 const app = express()
 const host = 'localhost'
-const port = 8080
+const port = 8082
 const ejs = require('ejs')
 
 app.get('/hello/:name/:count', (req, res) => {
@@ -275,7 +275,7 @@ app.listen(port, host, () => {
 例えば、このURLでは、クエリー変数として```name```と```count```を使っています。
 
 ```
-http://localhost:8080/hello?name=世界&count=3
+http://localhost:8082/hello?name=世界&count=3
 ```
 
 Webアプリでこれを参照するには、```req.query```を使います。GETリクエストを受け付けるURLを`/hello`に戻し、`req.params`を`req.query`にすべて変換します。
@@ -284,7 +284,7 @@ Webアプリでこれを参照するには、```req.query```を使います。GE
 const express = require('express')
 const app = express()
 const host = 'localhost'
-const port = 8080
+const port = 8082
 const ejs = require('ejs')
 
 app.get('/hello', (req, res) => {
@@ -320,7 +320,7 @@ POSTメソッドで受け取ったデータは、`req.body`で取得できます
 const express = require('express')
 const app = express()
 const host = 'localhost'
-const port = 8080
+const port = 8082
 const ejs = require('ejs')
 
 app.use(express.urlencoded({ extended: true }))
@@ -370,7 +370,7 @@ POSTでフォームから受け取った値を処理した後は```res.redirect(
 const express = require('express')
 const app = express()
 const host = 'localhost'
-const port = 8080
+const port = 8082
 const ejs = require('ejs')
 app.use(express.urlencoded({ extended: true }))
 const cookieParser = require('cookie-parser')
@@ -406,7 +406,7 @@ Webブラウザーの開発者ツールDevToolsのApplicationタブから、保�
 const express = require('express')
 const app = express()
 const host = 'localhost'
-const port = 8080
+const port = 8082
 const ejs = require('ejs')
 app.use(express.urlencoded({ extended: true }))
 const cookieParser = require('cookie-parser')
@@ -438,13 +438,13 @@ app.listen(port, host, () => {
 この時、
 
 ```
-http://localhost:8080/hello?message=こんにちは
+http://localhost:8082/hello?message=こんにちは
 ```
 
 であれば画面に、こんにちは、と表示されるだけですが、次のURLの場合はCookieのkeyとvalueがアラートに表示されてしまいます。
 
 ```
-http://localhost:8080/hello?message=<script>alert(document.cookie)</script>
+http://localhost:8082/hello?message=<script>alert(document.cookie)</script>
 ```
 
 このスクリプトではアラートに表示するだけですが、JavaScriptを工夫して別のサイトに送信してしまえば、クライアントのWebブラウザーで管理していた情報が外部に漏れてしまいます。
@@ -455,7 +455,7 @@ JavaScriptからクッキーにアクセスできないようにするには、h
 const express = require('express')
 const app = express()
 const host = 'localhost'
-const port = 8080
+const port = 8082
 const ejs = require('ejs')
 app.use(express.urlencoded({ extended: true }))
 const cookieParser = require('cookie-parser')
@@ -484,10 +484,10 @@ app.listen(port, host, () => {
 })
 ```
 
-一度ブラウザーで`http://localhost:8080/hello`にアクセスしてクッキーに保存しなおします。その上で、
+一度ブラウザーで`http://localhost:8082/hello`にアクセスしてクッキーに保存しなおします。その上で、
 
 ```
-http://localhost:8080/hello?message=<script>alert(document.cookie)</script>
+http://localhost:8082/hello?message=<script>alert(document.cookie)</script>
 ```
 
 にアクセスすると（XSSの脆弱性は修正していないのでアラートは表示されますが）クッキーの内容は表示されなくなりました。JavaScriptからクッキーにアクセスできなくなったためです。
@@ -513,7 +513,7 @@ DevToolsを使うと、クッキーの値の前後に、電子署名の文字列
 const express = require('express')
 const app = express()
 const host = 'localhost'
-const port = 8080
+const port = 8082
 const ejs = require('ejs')
 app.use(express.urlencoded({ extended: true }))
 const cookieParser = require('cookie-parser')
@@ -566,7 +566,7 @@ node.jsで環境変数を読み込むには```process.env.<環境変数名>```�
 const express = require('express')
 const app = express()
 const host = 'localhost'
-const port = 8080
+const port = 8082
 const ejs = require('ejs')
 app.use(express.urlencoded({ extended: true }))
 const cookieParser = require('cookie-parser')
