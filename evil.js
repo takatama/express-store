@@ -3,7 +3,7 @@ const ejs = require('ejs')
 const cookieParser = require('cookie-parser')
 const sqlite3 = require('sqlite3')
 
-const HOST='evil.localtest.me'
+const HOST='0.0.0.0'
 const PORT=8081
 const TARGET_URL='http://localhost:8080'
 const EVIL_DATABASE_FILE = 'evil.db'

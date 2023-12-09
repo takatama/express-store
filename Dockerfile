@@ -17,7 +17,6 @@ COPY . .
 # 各スクリプトのためのポートを開放
 EXPOSE 8080
 EXPOSE 8081
-EXPOSE 8082
 
 # app.db, evil.db を初期化
 RUN node setup.js

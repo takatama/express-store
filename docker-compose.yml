@@ -18,11 +18,3 @@ services:
       - .:/usr/src/app
       - /usr/src/app/node_modules
     command: node evil.js
-  hello:
-    build: .
-    ports:
-      - "8082:8082"
-    volumes:
-      - .:/usr/src/app
-      - /usr/src/app/node_modules
-    command: node hello.js
