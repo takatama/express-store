@@ -16,7 +16,7 @@ const app = express()
 app.use(express.urlencoded({ extended: true }))
 app.use(cookieParser(SECRET_KEY))
 app.use((req, res, next) => {
-    // Clickjacking対策
+    // Step5: Clickjacking対策
     res.header('X-Frame-Options', 'DENY')
     next()
 })
@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
 app.get('/login', (req, res) => {
     res.send(ejs.render(`
 <h1>ログイン</h1>
-<!-- XSS対策 -->
+<!-- Step2: XSS対策 -->
 <p style="color:red;"><%= message %></p>
 <form action="/login" method="post">
 <p>メールアドレス <input name="email" type="text" placeholder="user1@example.com" value="user1@example.com" /></p>
@@ -46,7 +46,7 @@ app.post('/login', (req, res) => {
     const password = req.body.password
     db.get('SELECT hashed_password, id, nickname FROM users WHERE email = ?;', email, (err, row) => {
         if (isValidPassword(password, row.hashed_password)) {            
-            // CSRF対策
+            // Step3: CSRF対策
             res.cookie('userId', row.id, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
             res.cookie('nickname', row.nickname, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
             return res.redirect('/products')
@@ -89,7 +89,7 @@ app.get('/products', (req, res) => {
     }
     const query = req.query.q
     if (query) {
-        // SQLインジェクション対策
+        // Step1: SQLインジェクション対策
         db.all("SELECT * FROM rated_products WHERE name LIKE ?;", "%" + query + "%", (err, rows) => {
             return res.send(productsHtml(nickname, rows, query))
         })
@@ -116,7 +116,7 @@ function productHtml(nickname, product, rate, comments, myRate, myComment) {
 <td>
     <ul style="list-style: none; padding-left: 0; margin-bottom: 0;">
     <% for (let comment of comments) { %>
-    <!-- XSS対策 -->
+    <!-- Step4: XSS対策 -->
     <li><%= comment %></li>
     <% } %>
     </ul>
