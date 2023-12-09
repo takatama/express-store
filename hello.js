@@ -5,8 +5,8 @@ const port = 8082
 const ejs = require('ejs')
 app.use(express.urlencoded({ extended: true }))
 const cookieParser = require('cookie-parser')
-const secureKey = process.env.SECURE_KEY
-if (!secureKey) throw '環境変数SECURE_KEYが設定されていません。'
+const secureKey = process.env.SECRET_KEY
+if (!secureKey) throw '環境変数 SECRET_KEY が設定されていません。'
 app.use(cookieParser(secureKey))
 
 app.get('/hello', (req, res) => {
