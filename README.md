@@ -10,42 +10,13 @@ OSはWindows、WebブラウザーはFirefoxを利用します。
 - [Webアプリケーションフレームワークについての基礎知識](/web-application-framework.md)
 - [Expressの使い方](/express-tutorial.md)
 
-## デモのはじめかた（Windows）
+## デモのはじめかた（Docker）
 
-まずWSL2にnvm、node.js、npmをインストールし、Visual Studio Codeの拡張機能を設定します。
-
-WSL 2 上で Node.js を設定する | Microsoft Learn
-https://learn.microsoft.com/ja-jp/windows/dev-environment/javascript/nodejs-on-wsl
-
-ソースコードを clone します。
+Dockerをインストールします。docker-composeでビルドと起動をします。
 
 ```console
-$ git clone https://github.com/takatama/express-store.git
-$ cd express-store
-```
-
-必要なモジュールをインストールします。
-
-```console
-$ npm install
-```
-
-データベースを初期化します。データベースのファイル```app.db```と```evil.db```が作成されます。
-
-```console
-$ node setup.js
-```
-
-署名付きcookieのための鍵を環境変数```SECRET_KEY```に設定します。適当な文字列で構いません。
-
-```console
-$ export SECRET_KEY=<署名付きcookieのための鍵（文字列）>
-```
-
-ECサイトを起動します。localhost:8080で立ち上がります。環境変数を設定し忘れていると、例外が発生して起動できないのでご注意ください。nodemonを使い、ソースコードを修正すると自動で再起動させています。
-
-```console
-$ npx nodemon app.js
+docker-compose build
+docker-compose up
 ```
 
 Firefoxで http://localhost:8080/ にアクセスすると使えます。
@@ -63,13 +34,16 @@ Firefoxで http://localhost:8080/ にアクセスすると使えます。
 http://localhost:8080/products
 ```
 
-商品の詳細ページからレビューを投稿できます。
+商品の詳細ページでは、商品の購入とレビューの投稿ができます。
 
 ```
 http://localhost:8080/products/1
 ```
 
 なお、購入は簡易的な実装で、アラートが表示されるだけです。
+レビューは評価とコメントを投稿できます。投稿したものを削除することもできます。
+
+ログインすると、nicknameとuserIdをクッキーに保存します。Webブラウザーのデベロッパーツールで確認すると（Applicationタブ > Storage > Cookies）、クッキーの値は暗号化されていることが分かります。
 
 ## ここから先の注意事項
 
@@ -81,7 +55,7 @@ http://localhost:8080/products/1
 
 ここでは攻撃者はまだ不正アクセスに失敗して、ECサイトを自由に改ざんすることはできない、という前提です。攻撃者はECサイトとは別の攻撃用サイトを準備していると仮定します。
 
-ECサイトと、攻撃用サイトはそれぞれ別のサイト名（ドメイン名）を持っています。ローカル環境で2つのサイトを動作させてデモします。ECサイトは```localhost:8080```で、攻撃用サイトは```localhost:8081```としますが、どちらも同じlocalhostだと分かりづらいので、攻撃用サイトには別名をつけて```evil.localtest.me:8081```を使います（もしポート番号がすでに使われている場合には別の番号を使ってください）。
+ECサイトと、攻撃用サイトはそれぞれ別のサイト名（ドメイン名）を持っています。ローカル環境で2つのサイトを動作させてデモします。ECサイトは```localhost:8080```で、攻撃用サイトは```localhost:8081```としますが、どちらも同じlocalhostだと分かりづらいので、攻撃用サイトには別名をつけて```evil.localtest.me:8081```を使います。
 
 なお```localtest.me```はループバックドメインと呼ばれる、開発用のドメイン名です。
 

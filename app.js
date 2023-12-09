@@ -4,10 +4,10 @@ const cookieParser = require('cookie-parser')
 const sqlite3 = require('sqlite3')
 const bcrypt = require('bcrypt')
 
-const HOST = 'localhost'
+const HOST = '0.0.0.0'
 const PORT = 8080
 const SECRET_KEY = process.env.SECRET_KEY
-if (!SECRET_KEY) throw '環境変数 STORE_SECRET_KEY が設定されていません。'
+if (!SECRET_KEY) throw '環境変数 SECRET_KEY が設定されていません。'
 const DATABASE_FILE = 'app.db'
 const db = new sqlite3.Database(DATABASE_FILE)
 sqlite3.verbose()
@@ -45,17 +45,17 @@ app.post('/login', (req, res) => {
     const email = req.body.email
     const password = req.body.password
     db.get('SELECT hashed_password, id, nickname FROM users WHERE email = ?;', email, (err, row) => {
-        if (isValidPassword(password, row.hashed_password)) {
+        if (isValidPassword(password, row.hashed_password)) {            
             // CSRF対策
             res.cookie('userId', row.id, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
             res.cookie('nickname', row.nickname, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
             return res.redirect('/products')
         }
-        console.log('Login faild: email is ' + email)
+        console.log('Login failed: Invalid password for email ' + email);
         return res.redirect('/login?message=ログインに失敗しました。')
-    })    
+    })
 })
-
+ 
 app.get('/logout', (req, res) => {
     res.clearCookie('userId', { path: '/' })
     res.clearCookie('nickname', { path: '/' })

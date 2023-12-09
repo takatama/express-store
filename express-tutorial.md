@@ -560,7 +560,7 @@ $ export 環境変数名=環境変数の値
 を使います。
 
 node.jsで環境変数を読み込むには```process.env.<環境変数名>```で参照します。
-環境変数名を```SECURE_KEY```にした時のコードは次の通りです。
+環境変数名を```SECRET_KEY```にした時のコードは次の通りです。
 
 ```javascript
 const express = require('express')
@@ -570,9 +570,9 @@ const port = 8082
 const ejs = require('ejs')
 app.use(express.urlencoded({ extended: true }))
 const cookieParser = require('cookie-parser')
-const SECURE_KEY = process.env.SECURE_KEY
-if (!SECURE_KEY) throw '環境変数SECURE_KEYが設定されていません。'
-app.use(cookieParser(SECURE_KEY))
+const SECRET_KEY = process.env.SECRET_KEY
+if (!SECRET_KEY) throw '環境変数 SECRET_KEY が設定されていません。'
+app.use(cookieParser(SECRET_KEY))
 
 app.get('/hello', (req, res) => {
   const name = req.signedCookies.name

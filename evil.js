@@ -3,7 +3,7 @@ const ejs = require('ejs')
 const cookieParser = require('cookie-parser')
 const sqlite3 = require('sqlite3')
 
-const HOST='evil.localtest.me'
+const HOST='0.0.0.0'
 const PORT=8081
 const TARGET_URL='http://localhost:8080'
 const EVIL_DATABASE_FILE = 'evil.db'
@@ -20,7 +20,7 @@ app.get('/', (req, res) => {
     res.send(`
 <h1>攻撃者が準備したサイト</h1>
 <ul>
-    <li><a href="/users">盗んだユーザー情報</a></li>
+    <li><a href="/users">盗んだ利用者情報</a></li>
     <li><a href="/game0">XSS</a></li>
     <li><a href="/game1">CSRF</a></li>
     <li><a href="/game2">CSRF + Persistent XSS</a></li>
@@ -32,7 +32,7 @@ app.get('/users', (req, res) => {
     const db = new sqlite3.Database(EVIL_DATABASE_FILE)
     db.all('SELECT * FROM users;', (err, rows) => {
         res.send(ejs.render(`
-<p>盗んだユーザー情報</p>
+<p>盗んだ利用者情報</p>
 <table border="1">
     <tr><th>時刻</th><th>メールアドレス</th><th>パスワード</th></tr>
     <% for (let row of rows) { %>
