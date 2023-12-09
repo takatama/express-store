@@ -55,14 +55,14 @@ async function setupDatabase() {
 
     await dbRun(db, 'DROP TABLE IF EXISTS users;')
     await dbRun(db, 'CREATE TABLE users(id INTEGER PRIMARY KEY AUTOINCREMENT, email STRING, hashed_password STRING, nickname STRING);')
-        // 9人のユーザーを登録する。
+        // 9人の利用者を登録する。
     for (let i = 1; i <= 9; i++) {
         await dbRun(db, 
             'INSERT INTO users (email, hashed_password, nickname) values (?, ?, ?)',
             [
                 'user' + i + '@example.com',
                 hashedPasswords[i - 1],
-                'ユーザー' + i
+                '利用者' + i
             ]
         )    
     }
