@@ -227,15 +227,6 @@ http://evil.localtest.me:8081/users
 
 Webブラウザーが持つセキュリティ機能を、Webアプリ側が強制的に有効にする方法があります。
 
-- X-XSS-Protectionヘッダー
-  - 1にすると、WebブラウザーのXSSフィルターを有効にします。また、mode=blockを指定するとWebブラウザーがXSSを検出した時にWebページの表示を停止します。
-  - ```X-XSS-Protection: 1; mode=block```
-  - ただし、Firefoxでは実装されていません。次に説明するContent-Security-Policyヘッダーを使ってください。
-
-> X-XSS-Protection - HTTP | MDN
-> 
-> https://developer.mozilla.org/ja/docs/Web/HTTP/Headers/X-XSS-Protection
-
 - Content-Security-Policyヘッダー
   - 様々なセキュリティポリシーを設定できます。例えば、全てのリソースを同じドメインからのみ取得させるには次のように指定します。
   - ```Content-Security-Policy: default-src 'self'```
