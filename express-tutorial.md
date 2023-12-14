@@ -118,7 +118,7 @@ http://localhost:8082/hello
 さて、サーバーの再起動をするのが面倒になってきました。そこで、新しく`nodemon`モジュールをインストールして、`hello.js`を書き換えると自動的にサーバーを再起動させてみます。
 
 ```console
-$ node i nodemon
+$ npm install nodemon
 $ npx nodemon hello.js
 ```
 
