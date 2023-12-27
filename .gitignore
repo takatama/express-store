@@ -80,7 +80,7 @@ web_modules/
 .yarn-integrity
 
 # dotenv environment variable files
-.env
+# .env #機微な情報をGitHubに公開しないようにしているが、今回の環境変数は機微ではないのでコメントアウトする
 .env.development.local
 .env.test.local
 .env.production.local
