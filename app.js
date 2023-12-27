@@ -18,6 +18,7 @@ app.use(cookieParser(SECRET_KEY))
 app.use((req, res, next) => {
     // Step5: Clickjacking対策
     res.header('X-Frame-Options', 'DENY')
+    // res.header('X-Frame-Option', 'DENY')
     next()
 })
 
@@ -30,6 +31,7 @@ app.get('/login', (req, res) => {
 <h1>ログイン</h1>
 <!-- Step2: XSS対策 -->
 <p style="color:red;"><%= message %></p>
+<!--p style="color:red;"> <%- message %> </p-->
 <form action="/login" method="post">
 <p>メールアドレス <input name="email" type="text" placeholder="user1@example.com" value="user1@example.com" /></p>
 <p>パスワード <input name="password" type="password" placeholder="password1" value="password1" /></p>
@@ -49,6 +51,8 @@ app.post('/login', (req, res) => {
             // Step3: CSRF対策
             res.cookie('userId', row.id, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
             res.cookie('nickname', row.nickname, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
+            // res.cookie('userId', row.id, { signed: true, path: '/', httpOnly: true, sameSite: 'none' })
+            // res.cookie('nickname', row.nickname, { signed: true, path: '/', httpOnly: true, sameSite: 'none' })            
             return res.redirect('/products')
         }
         console.log('Login failed: Invalid password for email ' + email);
@@ -91,6 +95,7 @@ app.get('/products', (req, res) => {
     if (query) {
         // Step1: SQLインジェクション対策
         db.all("SELECT * FROM rated_products WHERE name LIKE ?;", "%" + query + "%", (err, rows) => {
+        //db.all("SELECT * FROM rated_products WHERE name LIKE '%" + query + "%'", (err, rows) => {
             return res.send(productsHtml(nickname, rows, query))
         })
     } else {
@@ -118,6 +123,7 @@ function productHtml(nickname, product, rate, comments, myRate, myComment) {
     <% for (let comment of comments) { %>
     <!-- Step4: XSS対策 -->
     <li><%= comment %></li>
+    <!--li><%- comment %></li-->
     <% } %>
     </ul>
 </td>
