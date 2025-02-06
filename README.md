@@ -2,8 +2,6 @@
 
 JavaScriptのWebアプリフレームワークExpressを使ったECサイトのデモンストレーションです。ソースコードを編集して脆弱性をわざと仕込むことで、どんな攻撃が可能になるかを示していきます。
 
-OSはWindows、WebブラウザーはFirefoxを利用します。
-
 デモンストレーションを理解するのに必要な基礎知識は次の通りです：
 
 - [Webセキュリティについての基礎知識](/web-security.md)
@@ -19,7 +17,7 @@ docker-compose build
 docker-compose up
 ```
 
-Firefoxで http://localhost:8080/ にアクセスすると使えます。
+Webブラウザーで http://localhost:8080/ にアクセスすると使えます。
 
 利用者1でログインしてみます。
 
@@ -55,7 +53,7 @@ ECサイトと、攻撃用サイトはそれぞれ別のサイト名（ドメイ
 > 
 > https://weblogs.asp.net/owscott/introducing-testing-domain-localtest-me
 
-localhostに別名を割り当てるのによく使うのはhostsファイルですが、hostsファイルを変更するのには管理者権限が必要で、かつ、元に戻すのを忘れがちです。ループバックドメイン名は、DNSによってループバックアドレス```127.0.0.1```として解決されます。なので、Firefoxで```*.localtest.me```にアクセスするのは、localhostにアクセスするのと同じです。
+localhostに別名を割り当てるのによく使うのはhostsファイルですが、hostsファイルを変更するのには管理者権限が必要で、かつ、元に戻すのを忘れがちです。ループバックドメイン名は、DNSによってループバックアドレス```127.0.0.1```として解決されます。なので、Webブラウザーで```*.localtest.me```にアクセスするのは、localhostにアクセスするのと同じです。
 
 他には```lvh.me```というドメイン名が有名です。ただし、これらのドメインはドメインの管理者の気まぐれでいつ使えなくなってもおかしくないので注意してください。
 
@@ -79,7 +77,7 @@ localhostに別名を割り当てるのによく使うのはhostsファイルで
 +        db.all("SELECT * FROM rated_products WHERE name LIKE '%" + query + "%'", (err, rows) => {
 ```
 
-Firefoxで商品一覧を表示します。
+Webブラウザーで商品一覧を表示します。
 
 <a target="_blank" href="http://localhost:8080/products">http://localhost:8080/products</a>
 
@@ -170,7 +168,7 @@ usersテーブルのid、email、hashed_password、nicknameが漏洩してしま
 
 攻撃者は自分の持つ攻撃用サイトを立ち上げ、正規の利用者が正規のログイン画面に入力した情報を盗み出すことを思いつきます。
 
-攻撃用サイトを起動するには、別のコマンドプロンプトを立ち上げて、`evil.js`を実行します（Dockerを使っている場合すでに起動しています）。成功すればevil.localtest.meというホスト名の8081ポートで起動します。起動に失敗したり、起動できてもFirefoxからアクセスできない場合には、すでに8081番ポートが使われている可能性があります。例えば、8082など、別のポート番号にコードを書き換えて起動しなおしてください。`evil.js`の`PORT`の値を変更します。
+攻撃用サイトを起動するには、別のコマンドプロンプトを立ち上げて、`evil.js`を実行します（Dockerを使っている場合すでに起動しています）。成功すればevil.localtest.meというホスト名の8081ポートで起動します。起動に失敗したり、起動できてもWebブラウザーからアクセスできない場合には、すでに8081番ポートが使われている可能性があります。例えば、8082など、別のポート番号にコードを書き換えて起動しなおしてください。`evil.js`の`PORT`の値を変更します。
 
 ```console
 $ node evil.js
@@ -194,7 +192,7 @@ window.onload はページの読み込みが終了すると実行されます。
 
 <a target="_blank" href="http://evil.localtest.me:8081/game0">http://evil.localtest.me:8081/game0</a>
 
-利用者が送信ボタンを押してしまうと入力した情報が攻撃者に渡ってしまいます。攻撃者が盗み出した情報をFirefoxで確認してみましょう。これまでに集めた情報の一覧が表示されます。
+利用者が送信ボタンを押してしまうと入力した情報が攻撃者に渡ってしまいます。攻撃者が盗み出した情報をWebブラウザーで確認してみましょう。これまでに集めた情報の一覧が表示されます。
 
 <a target="_blank" href="http://evil.localtest.me:8081/users">http://evil.localtest.me:8081/users</a>
 
@@ -220,8 +218,6 @@ Webブラウザーが持つセキュリティ機能を、Webアプリ側が強�
 > https://developer.mozilla.org/ja/docs/Web/HTTP/CSP
 
 ## 3. クロスサイト・リクエストフォージェリ（CSRF）、4. 蓄積型クロスサイトスクリプティング（Persistent XSS）の合わせ技
-
-このセクションはWebブラウザーにFirefoxを使います。
 
 `Step3`で検索して、`app.js`を次のよう書き換えます。
 
@@ -356,8 +352,6 @@ if form_token != cookie_token:
 > [![](http://img.youtube.com/vi/ryztmcFf01Y/0.jpg)](http://www.youtube.com/watch?v=ryztmcFf01Y "")
 
 ## 5. クリックジャッキング（Clickjacking）
-
-このセクションはWebブラウザーにFirefoxを使います。
 
 前のセクションでクッキーのsamesite属性をnoneにした後に、`Step5`で検索して`app.js`を次のよう書き換えます。X-Frame-Optionsヘッダーのヘッダー名を間違え、sを抜かしたX-Frame-Optionにしてしまいました。
 
