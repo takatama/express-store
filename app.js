@@ -47,8 +47,8 @@ app.post('/login', (req, res) => {
     db.get('SELECT hashed_password, id, nickname FROM users WHERE email = ?;', email, (err, row) => {
         if (isValidPassword(password, row.hashed_password)) {            
             // Step3: CSRF対策
-            res.cookie('userId', row.id, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
-            res.cookie('nickname', row.nickname, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
+            res.cookie('userId', row.id, { signed: true, path: '/', httpOnly: true, secure: true, sameSite: 'lax' })
+            res.cookie('nickname', row.nickname, { signed: true, path: '/', httpOnly: true, secure: true, sameSite: 'lax' })
             return res.redirect('/products')
         }
         console.log('Login failed: Invalid password for email ' + email);

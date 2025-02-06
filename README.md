@@ -227,18 +227,20 @@ Webブラウザーが持つセキュリティ機能を、Webアプリ側が強�
 
 ```diff
             // Step3: CSRF対策
--            res.cookie('userId', row.id, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
--            res.cookie('nickname', row.nickname, { signed: true, path: '/', httpOnly: true, sameSite: 'lax' })
-+            res.cookie('userId', row.id, { signed: true, path: '/', httpOnly: true, sameSite: 'none' })
-+            res.cookie('nickname', row.nickname, { signed: true, path: '/', httpOnly: true, sameSite: 'none' })
+-            res.cookie('userId', row.id, { signed: true, path: '/', httpOnly: true, secure: true, sameSite: 'lax' })
+-            res.cookie('nickname', row.nickname, { signed: true, path: '/', httpOnly: true, secure: true, sameSite: 'lax' })
++            res.cookie('userId', row.id, { signed: true, path: '/', httpOnly: true, secure: true, sameSite: 'none' })
++            res.cookie('nickname', row.nickname, { signed: true, path: '/', httpOnly: true, secure: true, sameSite: 'none' })
 ```
 
-クッキーのsamesite属性について良く知らないまま、laxを指定すべきところを、noneを指定してしまいました。
+クッキーのsamesite属性について良く知らないまま、laxを指定すべきところを、noneを指定してしまいました[^1]。
 このことで、正規のサイトとは別に作られた、別のサイト上のフォームから、正規のサイトにPOSTメソッドでデータの登録が可能になってしまいます。samesite属性が無効になっていると、どのサイトに向けても過去に集めたクッキーをリクエストに付与して送信してしまうからです。
 
 > samesite | Cookies(クッキー), document.cookie
 > 
 > https://ja.javascript.info/cookie#ref-497
+
+[^1]: SameSite属性には`Strict`、`Lax`、`None`の3つの値があります。`Strict`は完全にクロスサイトのリクエストにクッキーを送信しない設定、`Lax`は一部のクロスサイトリクエスト（例えばGETメソッド）にクッキーを送信する設定、`None`は全てのクロスサイトリクエストにクッキーを送信する設定です。`None`を使用する場合は、クッキーに`Secure`属性を付ける必要があります。`Secure`属性なしで`None`を指定した場合、`Lax`として処理されます。
 
 このECサイトは、署名付きクッキーを認証に使っています。署名付きクッキーとは、電子署名が施されたクッキーで、例えばブラウザーの開発者ツール（DevTools）を使うなどして、第三者が値を変更（改ざん）するとクッキーの値が読み込めなくなります。ECサイトのWebアプリはこのクッキーが読み取れるかどうかで認証をし、アクセスを許可しています。しかし、samesite属性が設定されていないと、ECサイト以外の画面から送信されたリクエストに、このクッキーが付与されてしまうので、ECサイトは認証を通してしまうのです。
 
